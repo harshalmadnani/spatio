@@ -9,7 +9,23 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+// import { createPublicClient, http } from "viem";
+// import { mainnet } from "viem/chains";
+// import { createReadHyperdrive } from "@delvtech/hyperdrive-viem";
 
+// const publicClient = createPublicClient({
+//   chain: mainnet,
+//   transport: http(),
+// });
+
+// // 2. Create a ReadHyperdrive instance
+// const hyperdrive = createReadHyperdrive({
+//   address: "0x...",
+//   publicClient,
+// });
+
+// // 3. Get data from the contracts
+// const idleLiquidity = await hyperdrive.getIdleLiquidity();
 // Create a context for storing fetched data
 const DataContext = createContext(null);
 
@@ -313,7 +329,7 @@ function ChatInterface() {
   const [priceHistoryData, setPriceHistoryData] = useState({});
 
   const [isWalletDataLoading, setIsWalletDataLoading] = useState(false);
-
+  // console.log('*****idle liquidity*****:', idleLiquidity);
   // Add this constant after the existing state declarations
   const priceHistory = Object.entries(priceHistoryData).map(([coinName, data]) => ({
     coinName,
@@ -535,7 +551,7 @@ function ChatInterface() {
         open: true,
         message: 'Cannot fetch metadata: Coin name is undefined'
       });
-      return;
+      return null;
     }
 
     try {
@@ -549,11 +565,8 @@ function ChatInterface() {
       console.log('Metadata response received:', response);
 
       if (response.data && response.data.data) {
-        setMetadata(prevData => ({
-          ...prevData,
-          [coinname]: response.data.data
-        }));
-        console.log(`Metadata for ${coinname} updated successfully.`);
+        console.log(`Metadata for ${coinname} fetched successfully.`);
+        return response.data.data;
       } else {
         console.error('Invalid metadata structure:', response.data);
         throw new Error('Invalid metadata structure');
@@ -565,13 +578,21 @@ function ChatInterface() {
         open: true, 
         message: `Failed to fetch metadata for ${coinname}: ${error.message}`
       });
+      return null;
     }
   };
 
-  // Add a function to get metadata for a specific coin
+  // Modify the getMetadata function
   const getMetadata = async (token) => {
     if (!metadata[token]) {
-      await fetchMetadata(token);
+      const data = await fetchMetadata(token);
+      if (data) {
+        setMetadata(prevData => ({
+          ...prevData,
+          [token]: data
+        }));
+      }
+      return data;
     }
     return metadata[token] || null;
   };
@@ -707,14 +728,22 @@ atl(token)
 rank(token)
 totalSupply(token)
 circulatingSupply(token)
-
 website(token)
 twitter(token)
 telegram(token)
 discord(token)
-description(token)  
-
+description(token)
 priceHistoryData(token)
+kyc(token)
+audit(token)
+totalSupplyContracts(token)
+circulatingSupplyAddresses(token)
+maxSupply(token)
+chat(token)
+tags(token)
+distribution(token)
+investors(token)
+releaseSchedule(token)
 
 You also have access to the following portfolio-related data:
 
@@ -739,7 +768,7 @@ To use this data in your responses, you should generate JavaScript code that acc
 2. The last line of your code should return the processed data.
 3. Don't show any comments.
 4. Always use optional chaining (?.) when accessing object properties.
-5.Always return a value.`
+5. Always return a value.`
           },
           { 
             role: "user", 
@@ -810,7 +839,7 @@ To use this data in your responses, you should generate JavaScript code that acc
           const finalResponse = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
-              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}, if execution result says please resend the prompt, then just show that` }
+              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}` }
             ],
             temperature: 0.7,
             max_tokens: 3000,
@@ -849,6 +878,8 @@ To use this data in your responses, you should generate JavaScript code that acc
         'data', 'selectedCoin', 'setSelectedCoin', 'getMarketData', 'getMetadata',
         'price', 'volume', 'marketCap', 'website', 'twitter', 'telegram', 'discord', 'description',
         'portfolioData', 'renderCryptoPanicNews', 'historicPortfolioData', 'getTokenName',
+        'liquidity', 'kyc', 'audit', 'totalSupplyContracts', 'totalSupply', 'circulatingSupply',
+        'circulatingSupplyAddresses', 'maxSupply', 'chat', 'tags', 'distribution', 'investors', 'releaseSchedule',
         `
           const { priceHistoryData, cryptoPanicNews, historicPortfolioData: historicData, walletPortfolio } = data;
           
@@ -889,10 +920,62 @@ To use this data in your responses, you should generate JavaScript code that acc
             },
             priceHistoryData: async (token) => priceHistoryData?.[getTokenName(token)] || 'please resend the prompt',
             renderCryptoPanicNews: async (token) => renderCryptoPanicNews(getTokenName(token)) || 'please resend the prompt',
+            liquidity: async (token) => {
+              const result = await liquidity(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            kyc: async (token) => {
+              const result = await kyc(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            audit: async (token) => {
+              const result = await audit(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            totalSupplyContracts: async (token) => {
+              const result = await totalSupplyContracts(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            totalSupply: async (token) => {
+              const result = await totalSupply(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            circulatingSupply: async (token) => {
+              const result = await circulatingSupply(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            circulatingSupplyAddresses: async (token) => {
+              const result = await circulatingSupplyAddresses(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            maxSupply: async (token) => {
+              const result = await maxSupply(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            chat: async (token) => {
+              const result = await chat(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            tags: async (token) => {
+              const result = await tags(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            distribution: async (token) => {
+              const result = await distribution(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            investors: async (token) => {
+              const result = await investors(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
+            releaseSchedule: async (token) => {
+              const result = await releaseSchedule(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
           };
 
           const finalCode = \`${wrappedCode}\`.replace(
-            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews)\\(/g,
+            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule)\\(/g,
             'await wrappedFunctions.$1('
           );
 
@@ -910,7 +993,9 @@ To use this data in your responses, you should generate JavaScript code that acc
           assetsList: portfolioAssetsList,
           pnlTimelines: portfolioPNLTimelines
         },
-        renderCryptoPanicNews, historicPortfolioData, getTokenName
+        renderCryptoPanicNews, historicPortfolioData, getTokenName,
+        liquidity, kyc, audit, totalSupplyContracts, totalSupply, circulatingSupply,
+        circulatingSupplyAddresses, maxSupply, chat, tags, distribution, investors, releaseSchedule
       );
       
       if (result === undefined) {
@@ -1058,23 +1143,33 @@ To use this data in your responses, you should generate JavaScript code that acc
   // Modify these functions to return Promises
   const website = async (token) => {
     const metadata = await getMetadata(token);
-    return metadata?.website || 'N/A';
+    console.log('*****Website*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.website || 'N/A';
   };
   const twitter = async (token) => {
     const metadata = await getMetadata(token);
-    return metadata?.twitter || 'N/A';
+    console.log('*****Twitter*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.twitter || 'N/A';
   };
   const telegram = async (token) => {
     const metadata = await getMetadata(token);
-    return metadata?.telegram || 'N/A';
+    console.log('*****Telegram*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.telegram || 'N/A';
   };
   const discord = async (token) => {
     const metadata = await getMetadata(token);
-    return metadata?.discord || 'N/A';
+    console.log('*****Discord*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.discord || 'N/A';
   };
   const description = async (token) => {
     const metadata = await getMetadata(token);
-    return metadata?.description || 'N/A';
+    console.log('*****Description*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.description || 'N/A';
   };
   const price = async (token) => {
     const data = await getMarketData(token);
@@ -1083,80 +1178,178 @@ To use this data in your responses, you should generate JavaScript code that acc
     return data.price !== undefined ? `$${data.price.toFixed(2)}` : 'N/A';
   };
   const volume = async (token) => {
-    const data = await getMarketData(token);
-    return data?.volume !== undefined ? `$${data.volume.toFixed(2)}` : 'N/A';
+    const metadata = await getMetadata(token);
+    console.log('*****Volume*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.volume !== undefined ? `$${metadata.volume.toFixed(2)}` : 'N/A';
   };
   const marketCap = async (token) => {
     const data = await getMarketData(token);
-    return data?.market_cap !== undefined ? `$${data.market_cap.toFixed(2)}` : 'N/A';
+    console.log('*****Market Cap*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.market_cap !== undefined ? `$${data.market_cap.toFixed(2)}` : 'N/A';
   };
   const marketCapDiluted = async (token) => {
     const data = await getMarketData(token);
-    return `$${data?.market_cap_diluted?.toFixed(2) || 'N/A'}`;
+    console.log('*****Market Cap Diluted*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.market_cap_diluted !== undefined ? `$${data.market_cap_diluted.toFixed(2)}` : 'N/A';
   };
   const liquidity = async (token) => {
-    const data = await getMarketData(token);
-    return `$${data?.liquidity?.toFixed(2) || 'N/A'}`;
+    const metadata = await getMetadata(token);
+    console.log('*****Liquidity*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.liquidity !== undefined ? `$${metadata.liquidity.toFixed(2)}` : 'N/A';
   };
   const liquidityChange24h = async (token) => {
     const data = await getMarketData(token);
-    return `${data?.liquidity_change_24h?.toFixed(2) || 'N/A'}%`;
+    console.log('*****Liquidity Change 24h*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.liquidity_change_24h !== undefined ? `${data.liquidity_change_24h.toFixed(2)}%` : 'N/A';
   };
   const offChainVolume = async (token) => {
     const data = await getMarketData(token);
-    return `$${data?.off_chain_volume?.toFixed(2) || 'N/A'}`;
+    console.log('*****Off Chain Volume*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.off_chain_volume !== undefined ? `$${data.off_chain_volume.toFixed(2)}` : 'N/A';
   };
   const volume7d = async (token) => {
     const data = await getMarketData(token);
-    return `$${data?.volume_7d?.toFixed(2) || 'N/A'}`;
+    console.log('*****Volume 7d*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.volume_7d !== undefined ? `$${data.volume_7d.toFixed(2)}` : 'N/A';
   };
   const volumeChange24h = async (token) => {
     const data = await getMarketData(token);
-    return `${data?.volume_change_24h?.toFixed(2) || 'N/A'}%`;
+    console.log('*****Volume Change 24h*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.volume_change_24h !== undefined ? `${data.volume_change_24h.toFixed(2)}%` : 'N/A';
   };
   const isListed = async (token) => {
     const data = await getMarketData(token);
-    return data?.is_listed ? 'Yes' : 'No';
+    console.log('*****Is Listed*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.is_listed !== undefined ? (data.is_listed ? 'Yes' : 'No') : 'N/A';
   };
   const priceChange24h = async (token) => {
     const data = await getMarketData(token);
-    return `${data?.price_change_24h?.toFixed(2) || 'N/A'}%`;
+    console.log('*****Price Change 24h*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.price_change_24h !== undefined ? `${data.price_change_24h.toFixed(2)}%` : 'N/A';
   };
   const priceChange1h = async (token) => {
     const data = await getMarketData(token);
-    return `${data?.price_change_1h?.toFixed(2) || 'N/A'}%`;
+    console.log('*****Price Change 1h*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.price_change_1h !== undefined ? `${data.price_change_1h.toFixed(2)}%` : 'N/A';
   };
   const priceChange7d = async (token) => {
     const data = await getMarketData(token);
-    return `${data?.price_change_7d?.toFixed(2) || 'N/A'}%`;
+    console.log('*****Price Change 7d*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.price_change_7d !== undefined ? `${data.price_change_7d.toFixed(2)}%` : 'N/A';
   };
   const priceChange1m = async (token) => {
     const data = await getMarketData(token);
-    return `${data?.price_change_1m?.toFixed(2) || 'N/A'}%`;
+    console.log('*****Price Change 1m*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.price_change_1m !== undefined ? `${data.price_change_1m.toFixed(2)}%` : 'N/A';
   };
   const priceChange1y = async (token) => {
     const data = await getMarketData(token);
-    return `${data?.price_change_1y?.toFixed(2) || 'N/A'}%`;
+    console.log('*****Price Change 1y*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.price_change_1y !== undefined ? `${data.price_change_1y.toFixed(2)}%` : 'N/A';
   };
   const ath = async (token) => {
     const data = await getMarketData(token);
-    return `$${data?.ath?.toFixed(2) || 'N/A'}`;
+    console.log('*****ATH*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.ath !== undefined ? `$${data.ath.toFixed(2)}` : 'N/A';
   };
   const atl = async (token) => {
     const data = await getMarketData(token);
-    return `$${data?.atl?.toFixed(2) || 'N/A'}`;
+    console.log('*****ATL*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.atl !== undefined ? `$${data.atl.toFixed(2)}` : 'N/A';
   };
   const rank = async (token) => {
     const data = await getMarketData(token);
-    return data?.rank || 'N/A';
+    console.log('*****Rank*****:', data);
+    if (!data) return 'please resend the prompt';
+    return data.rank !== undefined ? data.rank : 'N/A';
   };
   const totalSupply = async (token) => {
-    const data = await getMarketData(token);
-    return data?.total_supply || 'N/A';
+    const metadata = await getMetadata(token);
+    console.log('*****Total Supply*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.total_supply !== undefined ? metadata.total_supply.toFixed(0) : 'N/A';
   };
   const circulatingSupply = async (token) => {
-    const data = await getMarketData(token);
-    return data?.circulating_supply || 'N/A';
+    const metadata = await getMetadata(token);
+    console.log('*****Circulating Supply*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.circulating_supply !== undefined ? metadata.circulating_supply.toFixed(0) : 'N/A';
+  };
+  const kyc = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****KYC*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.kyc || 'N/A';
+  };
+  const audit = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Audit*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.audit || 'N/A';
+  };
+  const totalSupplyContracts = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Total Supply Contracts*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.total_supply_contracts?.join(', ') || 'N/A';
+  };
+  const circulatingSupplyAddresses = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Circulating Supply Addresses*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.circulating_supply_addresses?.join(', ') || 'N/A';
+  };
+  const maxSupply = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Max Supply*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.max_supply !== undefined ? metadata.max_supply.toFixed(0) : 'N/A';
+  };
+  const chat = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Chat*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.chat || 'N/A';
+  };
+  const tags = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Tags*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.tags?.join(', ') || 'N/A';
+  };
+  const distribution = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Distribution*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.distribution?.map(d => `${d.name}: ${d.percentage}%`).join(', ') || 'N/A';
+  };
+  const investors = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Investors*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.investors?.map(i => i.name).join(', ') || 'N/A';
+  };
+  const releaseSchedule = async (token) => {
+    const metadata = await getMetadata(token);
+    console.log('*****Release Schedule*****:', metadata);
+    if (!metadata) return 'please resend the prompt';
+    return metadata.release_schedule?.join(', ') || 'N/A';
   };
   const renderCryptoPanicNews = (coinname) => {
     const newsItems = data.cryptoPanicNews?.[coinname];
@@ -1253,7 +1446,7 @@ To use this data in your responses, you should generate JavaScript code that acc
         ...styles.header,
         justifyContent: 'space-between',
       }}>
-        <img src={require('./spatio.png')} alt="spatio AI Logo" style={styles.logo} />
+        <img src={require('./SPATIO.png')} alt="spatio AI Logo" style={styles.logo} />
         <div style={{
           display: 'flex',
           alignItems: 'center',

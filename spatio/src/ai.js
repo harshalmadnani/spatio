@@ -776,12 +776,17 @@ portfolioData?.pnlTimelines: An object containing PNL data for different time pe
   - '30d': { realized: [value], unrealized: [value] }
   - '1y': { realized: [value], unrealized: [value] }
 
+You also have access to the following function for fetching news:
+
+renderCryptoPanicNews(token): Returns the latest news for the specified token.
+
 To use this data in your responses, you should generate JavaScript code that accesses and processes this data as needed. The code you generate will be executed by our system to provide the answer. Please format your response as follows:
 1. Include the JavaScript code within a code block, starting with \`\`\`javascript and ending with \`\`\`.
 2. The last line of your code should return the processed data.
 3. Don't show any comments.
 4. Always use optional chaining (?.) when accessing object properties.
-5. Always return a value.`
+5. Always return a value.
+6. When fetching news, use the renderCryptoPanicNews function and return its result directly.`
           },
           { 
             role: "user", 
@@ -1372,21 +1377,10 @@ To use this data in your responses, you should generate JavaScript code that acc
     const newsItems = data.cryptoPanicNews?.[coinname];
     
     if (!newsItems || newsItems.length === 0) {
-      return <Typography>No news available for {coinname}</Typography>;
+      return `No news available for ${coinname}`;
     }
 
-    return (
-      <div>
-        <Typography variant="h6">Latest News for {coinname}</Typography>
-        {newsItems.map((item, index) => (
-          <Typography key={index}>
-            <Link href={item.url} target="_blank" rel="noopener noreferrer">
-              {item.title}
-            </Link>
-          </Typography>
-        ))}
-      </div>
-    );
+    return newsItems.map(item => `${item.title}\n${item.url}`).join('\n\n');
   };
 
   const handleAcceptDisclaimer = () => {

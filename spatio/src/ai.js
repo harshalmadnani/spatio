@@ -9,24 +9,33 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-// import { createPublicClient, http } from "viem";
-// import { mainnet } from "viem/chains";
-// import { createReadHyperdrive } from "@delvtech/hyperdrive-viem";
+import { createPublicClient, http } from "viem";
+import { mainnet } from "viem/chains";
+import {IHyperdrive} from '@delvtech/hyperdrive-artifacts/IHyperdrive'
+import * as fixedPoint from '@delvtech/fixed-point-wasm'
+fixedPoint.initSync(fixedPoint.wasmBuffer)
 
-// const publicClient = createPublicClient({
-//   chain: mainnet,
-//   transport: http(),
-// });
+const publicClient = createPublicClient({
+  chain: mainnet,
+  transport: http(),
+});
 
-// // 2. Create a ReadHyperdrive instance
+const poolInfo = await publicClient.readContract({
+  address: "0xd7e470043241C10970953Bd8374ee6238e77D735",
+  abi: IHyperdrive.abi,
+  functionName: "getPoolInfo",
+})
+console.log('*****poolInfo*****:', poolInfo);
+// 2. Create a ReadHyperdrive instance
 // const hyperdrive = createReadHyperdrive({
 //   address: "0x...",
 //   publicClient,
+//   abi: 
 // });
 
-// // 3. Get data from the contracts
+// 3. Get data from the contracts
 // const idleLiquidity = await hyperdrive.getIdleLiquidity();
-// Create a context for storing fetched data
+
 const DataContext = createContext(null);
 
 const styles = {
@@ -729,7 +738,7 @@ function ChatInterface() {
       };
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "ft:gpt-4o-mini-2024-07-18:xade-ai::AKCDJVl9",
         messages: [
           { 
             role: "system",

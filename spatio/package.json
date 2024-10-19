@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@delvtech/fixed-point-wasm": "^0.0.6",
+    "@delvtech/hyperdrive-artifacts": "1.0.18",
+    "@delvtech/hyperdrive-js-core": "^3.0.6",
     "@delvtech/hyperdrive-viem": "^3.0.6",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",

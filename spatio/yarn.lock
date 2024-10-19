@@ -1822,14 +1822,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@delvtech/hyperdrive-artifacts@npm:^1.0.18":
+"@delvtech/hyperdrive-artifacts@npm:1.0.18, @delvtech/hyperdrive-artifacts@npm:^1.0.18":
   version: 1.0.18
   resolution: "@delvtech/hyperdrive-artifacts@npm:1.0.18"
   checksum: 26987ae48d9b71f4d390a6d5013d6318a003136f59c8a2d4e8cec07be7b7b8ba8a044f9f497b750ea3e946f788f18f514a9ba6eed1c06cad2269f1ae24715792
   languageName: node
   linkType: hard
 
-"@delvtech/hyperdrive-js-core@npm:3.0.6":
+"@delvtech/hyperdrive-js-core@npm:3.0.6, @delvtech/hyperdrive-js-core@npm:^3.0.6":
   version: 3.0.6
   resolution: "@delvtech/hyperdrive-js-core@npm:3.0.6"
   dependencies:
@@ -16003,6 +16003,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "spatio@workspace:."
   dependencies:
+    "@delvtech/fixed-point-wasm": ^0.0.6
+    "@delvtech/hyperdrive-artifacts": 1.0.18
+    "@delvtech/hyperdrive-js-core": ^3.0.6
     "@delvtech/hyperdrive-viem": ^3.0.6
     "@emotion/react": ^11.13.3
     "@emotion/styled": ^11.13.0

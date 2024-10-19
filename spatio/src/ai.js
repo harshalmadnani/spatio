@@ -479,7 +479,7 @@ function ChatInterface() {
         open: true,
         message: 'Cannot fetch market data: Coin name is undefined'
       });
-      return;
+      return null;
     }
 
     try {
@@ -493,11 +493,8 @@ function ChatInterface() {
       console.log('Response received:', response);
 
       if (response.data && response.data.data) {
-        setMarketData(prevData => ({
-          ...prevData,
-          [coinname]: response.data.data
-        }));
-        console.log(`Market data for ${coinname} updated successfully.`);
+        console.log(`Market data for ${coinname} fetched successfully.`);
+        return response.data.data;
       } else {
         console.error('Invalid market data structure:', response.data);
         throw new Error('Invalid market data structure');
@@ -509,14 +506,25 @@ function ChatInterface() {
         open: true, 
         message: `Failed to fetch market data for ${coinname}: ${error.message}`
       });
+      return null;
     }
   };
 
   // Function to get market data for a specific coin
   const getMarketData = async (token) => {
     if (!marketData[token]) {
-      await fetchMarketData(token);
+      const data = await fetchMarketData(token);
+      console.log('*****Market data*****:', data);
+      if (data) {
+        setMarketData(prevData => ({
+          ...prevData,
+          [token]: data
+        }));
+      console.log('*****Market data*****:', data);
+      }
+      return data;
     }
+    console.log('*****Market data*****:', data);
     return marketData[token] || null;
   };
 
@@ -802,7 +810,7 @@ To use this data in your responses, you should generate JavaScript code that acc
           const finalResponse = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
-              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}` }
+              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}, if execution result says please resend the prompt, then just show that` }
             ],
             temperature: 0.7,
             max_tokens: 3000,
@@ -1070,6 +1078,7 @@ To use this data in your responses, you should generate JavaScript code that acc
   };
   const price = async (token) => {
     const data = await getMarketData(token);
+    console.log('*****Price*****:', data);
     if (!data) return 'please resend the prompt';
     return data.price !== undefined ? `$${data.price.toFixed(2)}` : 'N/A';
   };

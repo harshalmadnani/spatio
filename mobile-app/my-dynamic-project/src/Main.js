@@ -67,24 +67,22 @@ const Main = () => {
             </button>
           </div>
         </div>
-        <div className="modal">
-          <DynamicWidget
-            onAuthSuccess={() => setIsLoggedIn(true)}
-            onLogout={() => setIsLoggedIn(false)}
-          />
-          {/* <DynamicMethods
-            isDarkMode={isDarkMode}
-            onLoginStatusChange={handleLoginStatusChange}
-          /> */}
-          {isLoggedIn && <ChatInterface />}
-        </div>
-        <div className="footer">
-          <div className="footer-text">Made with ❤️ by dynamic</div>
-          <img
-            className="footer-image"
-            src={isDarkMode ? "/image-dark.png" : "/image-light.png"}
-            alt="dynamic"
-          />
+        <div className="content-wrapper">
+          <div className="modal auth-section">
+            <DynamicWidget
+              onAuthSuccess={() => setIsLoggedIn(true)}
+              onLogout={() => setIsLoggedIn(false)}
+            />
+            {/* <DynamicMethods
+              isDarkMode={isDarkMode}
+              onLoginStatusChange={handleLoginStatusChange}
+            /> */}
+          </div>
+          {isLoggedIn && (
+            <div className="chat-interface-wrapper reduced-width">
+              <ChatInterface />
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -49,8 +49,8 @@ const DataContext = createContext(null);
 
 const styles = {
   chatInterface: {
-    width: "100vw",
-    height: "100vh",
+    width: "98vw",
+    height: "98vh",
     margin: 0,
     padding: 0,
     fontFamily: "'SK Modernist', sans-serif",

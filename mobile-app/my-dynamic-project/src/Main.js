@@ -34,49 +34,16 @@ const Main = () => {
   return (
     <>
       <div className={`container ${isDarkMode ? "dark" : "light"}`}>
-        <div className="header">
-          <img
-            className="logo"
-            src={isDarkMode ? "/logo-light.png" : "/logo-dark.png"}
-            alt="dynamic"
-          />
-          <div className="header-buttons">
-            <button
-              className="docs-button"
-              onClick={() =>
-                window.open(
-                  "https://docs.dynamic.xyz",
-                  "_blank",
-                  "noopener,noreferrer"
-                )
-              }
-            >
-              Docs
-            </button>
-            <button
-              className="get-started"
-              onClick={() =>
-                window.open(
-                  "https://app.dynamic.xyz",
-                  "_blank",
-                  "noopener,noreferrer"
-                )
-              }
-            >
-              Get started
-            </button>
-          </div>
-        </div>
         <div className="content-wrapper">
           <div className="modal auth-section">
             <DynamicWidget
               onAuthSuccess={() => setIsLoggedIn(true)}
               onLogout={() => setIsLoggedIn(false)}
             />
-            {/* <DynamicMethods
+            {/*<DynamicMethods
               isDarkMode={isDarkMode}
               onLoginStatusChange={handleLoginStatusChange}
-            /> */}
+            />*/}
           </div>
           {isLoggedIn && (
             <div className="chat-interface-wrapper reduced-width">

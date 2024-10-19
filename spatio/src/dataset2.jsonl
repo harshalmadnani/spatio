@@ -1,0 +1,1 @@
+{"messages": [{"role": "user", "content": "What is the current price of Bitcoin?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}

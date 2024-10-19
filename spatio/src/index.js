@@ -3,11 +3,13 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-
+import { PrivyProvider } from '@privy-io/react-auth';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <PrivyProvider appId={process.env.REACT_APP_PRIVY_APP_ID}>
+      <App />
+    </PrivyProvider>
   </React.StrictMode>
 );
 

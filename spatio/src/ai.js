@@ -252,7 +252,8 @@ const styles = {
 };
 
 const openai = new OpenAI({
-  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
   dangerouslyAllowBrowser: true
 });
 

@@ -7,7 +7,7 @@ import { PrivyProvider } from '@privy-io/react-auth';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <PrivyProvider appId={process.env.REACT_APP_PRIVY_APP_ID}>
+    <PrivyProvider   appId="cm2flh2td04ih2tqbk42z7nsz">
       <App />
     </PrivyProvider>
   </React.StrictMode>

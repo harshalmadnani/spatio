@@ -301,8 +301,8 @@ function ChatInterface() {
     fetchCryptoPanicData(selectedCoin);
     getMarketData(selectedCoin);
     getMetadata(selectedCoin);
-    fetchHistoricPortfolioData();
-    fetchWalletPortfolio();
+    getHistoricPortfolio(); // Changed from fetchHistoricPortfolioData
+    getWalletPortfolio(); // Changed from fetchWalletPortfolio
   }, [selectedCoin, walletAddresses]);
   // Add a new state for error snackbar
   const [errorSnackbar, setErrorSnackbar] = useState({ open: false, message: '' });
@@ -318,12 +318,7 @@ function ChatInterface() {
   const [totalRealizedPNL, setTotalRealizedPNL] = useState(0);
   const [totalUnrealizedPNL, setTotalUnrealizedPNL] = useState(0);
   const [assets, setAssets] = useState([]);
-  const [totalPNLHistory, setTotalPNLHistory] = useState({
-    '24h': { realized: 0, unrealized: 0 },
-    '7d': { realized: 0, unrealized: 0 },
-    '30d': { realized: 0, unrealized: 0 },
-    '1y': { realized: 0, unrealized: 0 },
-  });
+  const [totalPNLHistory, setTotalPNLHistory] = useState({});
   const [isWalletPortfolioLoading, setIsWalletPortfolioLoading] = useState(true);
   const [historicPortfolioData, setHistoricPortfolioData] = useState(null);
   const [priceHistoryData, setPriceHistoryData] = useState({});
@@ -352,24 +347,13 @@ function ChatInterface() {
     value: asset.estimated_balance?.toFixed(2) ?? 'N/A'
   })) ?? [];
 
-  const portfolioPNLTimelines = {
-    '24h': {
-      realized: totalPNLHistory?.['24h']?.realized?.toFixed(2) ?? 'N/A',
-      unrealized: totalPNLHistory?.['24h']?.unrealized?.toFixed(2) ?? 'N/A'
-    },
-    '7d': {
-      realized: totalPNLHistory?.['7d']?.realized?.toFixed(2) ?? 'N/A',
-      unrealized: totalPNLHistory?.['7d']?.unrealized?.toFixed(2) ?? 'N/A'
-    },
-    '30d': {
-      realized: totalPNLHistory?.['30d']?.realized?.toFixed(2) ?? 'N/A',
-      unrealized: totalPNLHistory?.['30d']?.unrealized?.toFixed(2) ?? 'N/A'
-    },
-    '1y': {
-      realized: totalPNLHistory?.['1y']?.realized?.toFixed(2) ?? 'N/A',
-      unrealized: totalPNLHistory?.['1y']?.unrealized?.toFixed(2) ?? 'N/A'
-    }
-  };
+  const portfolioPNLTimelines = Object.entries(totalPNLHistory).reduce((acc, [key, value]) => {
+    acc[key] = {
+      realized: value.realized?.toFixed(2) ?? 'N/A',
+      unrealized: value.unrealized?.toFixed(2) ?? 'N/A'
+    };
+    return acc;
+  }, {});
 
   useEffect(() => {
     if (messageListRef.current) {
@@ -609,47 +593,35 @@ function ChatInterface() {
     return metadata[token] || null;
   };
 
-  const fetchHistoricPortfolioData = async (from = null, to = null, addresses = walletAddresses) => {
-    try {
-      to = to || Date.now();
-      from = from || to - 365 * 24 * 60 * 60 * 1000; // Default to 1 year if not provided
-
-      const url = `https://api.mobula.io/api/1/wallet/history`;
-      const params = new URLSearchParams({
-        wallets: addresses.join(','),
-        from: from,
-        to: to
-      });
-
-      console.log(`Fetching historic portfolio data from: ${url}?${params.toString()}`);
-
-      const response = await axios.get(url, {
-        params: params,
-        headers: {
-          Authorization: 'e26c7e73-d918-44d9-9de3-7cbe55b63b99'
-        }
-      });
-
-      if (response.data) {
-        setHistoricPortfolioData(response.data);
-        console.log('Historic portfolio data updated successfully.');
-        return response.data;  // Return the data
-      } else {
-        throw new Error('Invalid historic portfolio data structure');
+  const getWalletPortfolio = async (addresses = walletAddresses) => {
+    if (!data.walletPortfolio) {
+      const portfolioData = await fetchWalletPortfolio(addresses);
+      if (portfolioData) {
+        setData(prevData => ({
+          ...prevData,
+          walletPortfolio: portfolioData
+        }));
       }
-    } catch (error) {
-      console.error('Error fetching historic portfolio data:', error);
-      console.error('Error details:', error.response?.data || error.message);
-      setErrorSnackbar({ 
-        open: true, 
-        message: `Failed to fetch historic portfolio data: ${error.message}`
-      });
-      return null;  // Return null on error
+      return portfolioData;
     }
+    return data.walletPortfolio || null;
   };
 
-  const fetchWalletPortfolio = async (addresses = walletAddresses) => {
-    setIsWalletPortfolioLoading(true);
+  const getHistoricPortfolio = async (from = null, to = null, addresses = walletAddresses) => {
+    if (!data.historicPortfolioData) {
+      const historicData = await fetchHistoricPortfolio(from, to, addresses);
+      if (historicData) {
+        setData(prevData => ({
+          ...prevData,
+          historicPortfolioData: historicData
+        }));
+      }
+      return historicData;
+    }
+    return data.historicPortfolioData || null;
+  };
+
+  const fetchWalletPortfolio = async (addresses) => {
     try {
       const url = `https://api.mobula.io/api/1/wallet/multi-portfolio`;
       const params = new URLSearchParams({
@@ -674,14 +646,12 @@ function ChatInterface() {
         setWalletAddresses(portfolioData.wallets);
         setTotalRealizedPNL(portfolioData.total_realized_pnl);
         setTotalUnrealizedPNL(portfolioData.total_unrealized_pnl);
-        setAssets(portfolioData.assets);
-        setTotalPNLHistory(portfolioData.total_pnl_history);
+        setAssets(portfolioData.assets || []);
+        setTotalPNLHistory(portfolioData.total_pnl_history || {});
         
-        // Log the assets array
         console.log('Assets:', portfolioData.assets);
         
-        setData(prevData => ({ ...prevData, walletPortfolio: response.data }));
-        return response.data;  // Return the data
+        return response.data;
       } else {
         throw new Error('Invalid wallet portfolio data structure');
       }
@@ -689,9 +659,45 @@ function ChatInterface() {
       console.error('Error fetching wallet portfolio:', error);
       console.error('Error details:', error.response?.data || error.message);
       setErrorSnackbar({ open: true, message: `Failed to fetch wallet portfolio: ${error.message}` });
-      return null;  // Return null on error
-    } finally {
-      setIsWalletPortfolioLoading(false);
+      return null;
+    }
+  };
+
+  const fetchHistoricPortfolio = async (from = null, to = null, addresses) => {
+    try {
+      to = to || Date.now();
+      from = from || to - 365 * 24 * 60 * 60 * 1000; // Default to 1 year if not provided
+
+      const url = `https://api.mobula.io/api/1/wallet/history`;
+      const params = new URLSearchParams({
+        wallets: addresses.join(','),
+        from: from,
+        to: to
+      });
+
+      console.log(`Fetching historic portfolio data from: ${url}?${params.toString()}`);
+
+      const response = await axios.get(url, {
+        params: params,
+        headers: {
+          Authorization: 'e26c7e73-d918-44d9-9de3-7cbe55b63b99'
+        }
+      });
+
+      if (response.data) {
+        console.log('Historic portfolio data updated successfully.');
+        return response.data;
+      } else {
+        throw new Error('Invalid historic portfolio data structure');
+      }
+    } catch (error) {
+      console.error('Error fetching historic portfolio data:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      setErrorSnackbar({ 
+        open: true, 
+        message: `Failed to fetch historic portfolio data: ${error.message}`
+      });
+      return null;
     }
   };
 
@@ -707,8 +713,19 @@ function ChatInterface() {
         balance: portfolioBalance,
         realizedPNL: portfolioRealizedPNL,
         unrealizedPNL: portfolioUnrealizedPNL,
-        assetsList: portfolioAssetsList,
-        pnlTimelines: portfolioPNLTimelines
+        assetsList: assets.map(asset => ({
+          name: asset.asset?.name || 'Unknown',
+          symbol: asset.asset?.symbol || 'N/A',
+          balance: asset.token_balance?.toFixed(6) || 'N/A',
+          value: asset.estimated_balance?.toFixed(2) || 'N/A'
+        })),
+        pnlTimelines: Object.entries(totalPNLHistory).reduce((acc, [key, value]) => {
+          acc[key] = {
+            realized: value.realized?.toFixed(2) || 'N/A',
+            unrealized: value.unrealized?.toFixed(2) || 'N/A'
+          };
+          return acc;
+        }, {})
       };
 
       const response = await openai.chat.completions.create({
@@ -760,17 +777,17 @@ getPriceHistory(token)
 
 You also have access to the following portfolio-related data:
 
-portfolioData?.balance: The total balance of the user's portfolio.
-portfolioData?.realizedPNL: The total realized Profit and Loss of the portfolio.
-portfolioData?.unrealizedPNL: The total unrealized Profit and Loss of the portfolio.
+portfolioData.balance: The total balance of the user's portfolio.
+portfolioData.realizedPNL: The total realized Profit and Loss of the portfolio.
+portfolioData.unrealizedPNL: The total unrealized Profit and Loss of the portfolio.
 
-portfolioData?.assetsList: An array of objects containing details about each asset in the portfolio. Each object has the following properties:
+portfolioData.assetsList: An array of objects containing details about each asset in the portfolio. Each object has the following properties:
   - name: The name of the asset
   - symbol: The symbol of the asset
   - balance: The balance of the asset
   - value: The estimated value of the asset in USD
 
-portfolioData?.pnlTimelines: An object containing PNL data for different time periods. It has the following structure:
+portfolioData.pnlTimelines: An object containing PNL data for different time periods. It has the following structure:
   - '24h': { realized: [value], unrealized: [value] }
   - '7d': { realized: [value], unrealized: [value] }
   - '30d': { realized: [value], unrealized: [value] }
@@ -996,6 +1013,8 @@ To use this data in your responses, you should generate JavaScript code that acc
             },
           };
 
+          // Use the existing portfolioData instead of declaring it again
+          
           const finalCode = \`${wrappedCode}\`.replace(
             /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory)\\(/g,
             'await wrappedFunctions.$1('
@@ -1012,8 +1031,19 @@ To use this data in your responses, you should generate JavaScript code that acc
           balance: portfolioBalance,
           realizedPNL: portfolioRealizedPNL,
           unrealizedPNL: portfolioUnrealizedPNL,
-          assetsList: portfolioAssetsList,
-          pnlTimelines: portfolioPNLTimelines
+          assetsList: assets.map(asset => ({
+            name: asset.asset?.name || 'Unknown',
+            symbol: asset.asset?.symbol || 'N/A',
+            balance: asset.token_balance?.toFixed(6) || 'N/A',
+            value: asset.estimated_balance?.toFixed(2) || 'N/A'
+          })),
+          pnlTimelines: Object.entries(totalPNLHistory).reduce((acc, [key, value]) => {
+            acc[key] = {
+              realized: value.realized?.toFixed(2) || 'N/A',
+              unrealized: value.unrealized?.toFixed(2) || 'N/A'
+            };
+            return acc;
+          }, {})
         },
         renderCryptoPanicNews, historicPortfolioData, getTokenName,
         liquidity, kyc, audit, totalSupplyContracts, totalSupply, circulatingSupply,
@@ -1115,8 +1145,8 @@ To use this data in your responses, you should generate JavaScript code that acc
       console.log('Updated wallet addresses:', updatedAddresses);
 
       const [historicData, walletData] = await Promise.all([
-        fetchHistoricPortfolioData(null, null, updatedAddresses),
-        fetchWalletPortfolio(updatedAddresses)
+        getHistoricPortfolio(null, null, updatedAddresses),
+        getWalletPortfolio(updatedAddresses)
       ]);
 
       // Wait for a short delay to ensure data is properly set
@@ -1130,13 +1160,6 @@ To use this data in your responses, you should generate JavaScript code that acc
       if (!historicData || !walletData) {
         throw new Error('Failed to load wallet data: One or both data fetches returned null or undefined');
       }
-
-      // Update the data state
-      setData(prevData => ({
-        ...prevData,
-        historicPortfolioData: historicData,
-        walletPortfolio: walletData
-      }));
 
       setErrorSnackbar({ open: true, message: 'Wallet data updated successfully' });
     } catch (error) {
@@ -1283,6 +1306,7 @@ To use this data in your responses, you should generate JavaScript code that acc
     if (!data) return 'please resend the prompt';
     return data.price_change_1y !== undefined ? `${data.price_change_1y.toFixed(2)}%` : 'N/A';
   };
+
   const ath = async (token) => {
     const data = await getMarketData(token);
     console.log('*****ATH*****:', data);
@@ -1373,14 +1397,61 @@ To use this data in your responses, you should generate JavaScript code that acc
     if (!metadata) return 'please resend the prompt';
     return metadata.release_schedule?.join(', ') || 'N/A';
   };
-  const renderCryptoPanicNews = (coinname) => {
-    const newsItems = data.cryptoPanicNews?.[coinname];
-    
-    if (!newsItems || newsItems.length === 0) {
-      return `No news available for ${coinname}`;
-    }
+  const renderCryptoPanicNews = async (coinname) => {
+    try {
+      if (!coinname) {
+        console.error('Attempted to fetch CryptoPanic data with undefined coinname');
+        return 'Cannot fetch news: Coin name is undefined';
+      }
 
-    return newsItems.map(item => `${item.title}\n${item.url}`).join('\n\n');
+      const coin = coins.find(c => c.name.toLowerCase() === coinname.toLowerCase());
+      if (!coin) {
+        return `Coin not found: ${coinname}`;
+      }
+
+      if (!data.cryptoPanicNews || !data.cryptoPanicNews[coinname]) {
+        console.log(`Fetching CryptoPanic data for ${coinname} (${coin.symbol})...`);
+        const response = await axios.get(`https://cryptopanic.com/api/free/v1/posts/`, {
+          params: {
+            auth_token: '2c962173d9c232ada498efac64234bfb8943ba70',
+            public: 'true',
+            currencies: coin.symbol
+          }
+        });
+
+        if (response.data && response.data.results) {
+          const newsItems = response.data.results.map(item => ({
+            title: item.title,
+            url: item.url
+          }));
+          
+          setData(prevData => ({ 
+            ...prevData, 
+            cryptoPanicNews: { 
+              ...prevData.cryptoPanicNews, 
+              [coinname]: newsItems 
+            } 
+          }));
+          
+          console.log(`CryptoPanic data for ${coinname} updated successfully.`);
+        } else {
+          console.error('Invalid CryptoPanic data structure:', response.data);
+          return 'Error: Invalid news data structure';
+        }
+      }
+
+      const newsItems = data.cryptoPanicNews[coinname];
+      
+      if (!newsItems || newsItems.length === 0) {
+        return `No news available for ${coinname}`;
+      }
+
+      return newsItems.map(item => `${item.title}\n${item.url}`).join('\n\n');
+    } catch (error) {
+      console.error(`Error fetching CryptoPanic data for ${coinname}:`, error);
+      console.error('Error details:', error.response?.data || error.message);
+      return `Error fetching news for ${coinname}: ${error.message}`;
+    }
   };
 
   const handleAcceptDisclaimer = () => {

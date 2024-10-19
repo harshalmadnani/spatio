@@ -421,7 +421,7 @@ function ChatInterface() {
           ...prevData, 
           [coinname]: response.data.data.price_history
         }));
-        console.log(`Price history for ${coinname} updated successfully.`);
+        console.log(`Price history for ${coinname} updated successfully., ${response.data.data}`);
       } else {
         console.error('Invalid price history data structure:', response.data);
         throw new Error('Invalid price history data structure');

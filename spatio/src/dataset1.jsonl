@@ -1,8 +1,90 @@
-{"messages": [{"role": "user", "content": "Should I buy Bitcoin?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}
-{"messages": [{"role": "user", "content": "Should I buy Bitcoin right now?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}
-{"messages": [{"role": "user", "content": "Why should I buy Bitcoin?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}
-{"messages": [{"role": "user", "content": "Bitcoin performance?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}
-{"messages": [{"role": "user", "content": "Why is Bitcoin performing well?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}
-{"messages": [{"role": "user", "content": "Why is Bitcoin pumping?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}
-{"messages": [{"role": "user", "content": "Why is Bitcoin dumping?"}, {"role": "assistant", "content": "```javascript\nsetSelectedCoin({ name: 'Bitcoin', symbol: 'BTC' });\nreturn `The current price of ${selectedCoin.name} is $${marketData?.price?.toFixed(2)}`;\n```"}]}
-
+{"messages": [{"role": "user", "content": "btc price?"}, {"role": "assistant", "content": "```javascript\nreturn await price('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "eth news"}, {"role": "assistant", "content": "```javascript\nreturn await renderCryptoPanicNews('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "ada cap"}, {"role": "assistant", "content": "```javascript\nreturn await marketCap('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "sol 24h"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange24h('solana');\n```"}]}
+{"messages": [{"role": "user", "content": "doge supply"}, {"role": "assistant", "content": "```javascript\nreturn await totalSupply('dogecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "dot site"}, {"role": "assistant", "content": "```javascript\nreturn await website('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "link volume"}, {"role": "assistant", "content": "```javascript\nreturn await volume7d('chainlink');\n```"}]}
+{"messages": [{"role": "user", "content": "xrp ath"}, {"role": "assistant", "content": "```javascript\nreturn await ath('ripple');\n```"}]}
+{"messages": [{"role": "user", "content": "uni circ"}, {"role": "assistant", "content": "```javascript\nreturn await circulatingSupply('uniswap');\n```"}]}
+{"messages": [{"role": "user", "content": "ltc rank"}, {"role": "assistant", "content": "```javascript\nreturn await rank('litecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "bnb socials"}, {"role": "assistant", "content": "```javascript\nreturn {\n  twitter: await twitter('binance coin'),\n  telegram: await telegram('binance coin'),\n  discord: await discord('binance coin')\n};\n```"}]}
+{"messages": [{"role": "user", "content": "balance"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.balance;\n```"}]}
+{"messages": [{"role": "user", "content": "top3"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.assetsList\n  .sort((a, b) => parseFloat(b.value) - parseFloat(a.value))\n  .slice(0, 3)\n  .map(asset => ({ name: asset.name, symbol: asset.symbol, value: asset.value }));\n```"}]}
+{"messages": [{"role": "user", "content": "pnl"}, {"role": "assistant", "content": "```javascript\nreturn { realizedPNL: portfolioData.realizedPNL, unrealizedPNL: portfolioData.unrealizedPNL };\n```"}]}
+{"messages": [{"role": "user", "content": "30d perf"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.pnlTimelines['30d'];\n```"}]}
+{"messages": [{"role": "user", "content": "eth 1h"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange1h('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "uni liq"}, {"role": "assistant", "content": "```javascript\nreturn await liquidity('uniswap');\n```"}]}
+{"messages": [{"role": "user", "content": "btc vol chg"}, {"role": "assistant", "content": "```javascript\nreturn await volumeChange24h('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "ada listed?"}, {"role": "assistant", "content": "```javascript\nreturn await isListed('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "dot 7d"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange7d('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "link atl"}, {"role": "assistant", "content": "```javascript\nreturn await atl('chainlink');\n```"}]}
+{"messages": [{"role": "user", "content": "btc max"}, {"role": "assistant", "content": "```javascript\nreturn await maxSupply('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "eth tags"}, {"role": "assistant", "content": "```javascript\nreturn await tags('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "xrp dist"}, {"role": "assistant", "content": "```javascript\nreturn await distribution('ripple');\n```"}]}
+{"messages": [{"role": "user", "content": "dot investors"}, {"role": "assistant", "content": "```javascript\nreturn await investors('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the current price of Bitcoin?"}, {"role": "assistant", "content": "```javascript\nreturn await price('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "Show me the latest news about Ethereum."}, {"role": "assistant", "content": "```javascript\nreturn await renderCryptoPanicNews('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the market cap of Cardano?"}, {"role": "assistant", "content": "```javascript\nreturn await marketCap('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 24-hour price change for Solana?"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange24h('solana');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the total supply of Dogecoin?"}, {"role": "assistant", "content": "```javascript\nreturn await totalSupply('dogecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the website for Polkadot?"}, {"role": "assistant", "content": "```javascript\nreturn await website('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 7-day trading volume for Chainlink?"}, {"role": "assistant", "content": "```javascript\nreturn await volume7d('chainlink');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the all-time high price for Ripple (XRP)?"}, {"role": "assistant", "content": "```javascript\nreturn await ath('ripple');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the circulating supply of Uniswap?"}, {"role": "assistant", "content": "```javascript\nreturn await circulatingSupply('uniswap');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the current rank of Litecoin?"}, {"role": "assistant", "content": "```javascript\nreturn await rank('litecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "What are the social media links for Binance Coin?"}, {"role": "assistant", "content": "```javascript\nreturn {\n  twitter: await twitter('binance coin'),\n  telegram: await telegram('binance coin'),\n  discord: await discord('binance coin')\n};\n```"}]}
+{"messages": [{"role": "user", "content": "What's my current portfolio balance?"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.balance;\n```"}]}
+{"messages": [{"role": "user", "content": "Show me my top 3 assets by value."}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.assetsList\n  .sort((a, b) => parseFloat(b.value) - parseFloat(a.value))\n  .slice(0, 3)\n  .map(asset => ({ name: asset.name, symbol: asset.symbol, value: asset.value }));\n```"}]}
+{"messages": [{"role": "user", "content": "What's my total realized and unrealized PNL?"}, {"role": "assistant", "content": "```javascript\nreturn { realizedPNL: portfolioData.realizedPNL, unrealizedPNL: portfolioData.unrealizedPNL };\n```"}]}
+{"messages": [{"role": "user", "content": "Show me my portfolio performance over the last 30 days."}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.pnlTimelines['30d'];\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 1-hour price change for Ethereum?"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange1h('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the liquidity of Uniswap?"}, {"role": "assistant", "content": "```javascript\nreturn await liquidity('uniswap');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 24-hour volume change for Bitcoin?"}, {"role": "assistant", "content": "```javascript\nreturn await volumeChange24h('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "Is Cardano listed on major exchanges?"}, {"role": "assistant", "content": "```javascript\nreturn await isListed('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 7-day price change for Polkadot?"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange7d('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the all-time low price for Chainlink?"}, {"role": "assistant", "content": "```javascript\nreturn await atl('chainlink');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the max supply of Bitcoin?"}, {"role": "assistant", "content": "```javascript\nreturn await maxSupply('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "What are the tags associated with Ethereum?"}, {"role": "assistant", "content": "```javascript\nreturn await tags('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the distribution of Ripple (XRP)?"}, {"role": "assistant", "content": "```javascript\nreturn await distribution('ripple');\n```"}]}
+{"messages": [{"role": "user", "content": "Who are the investors in Polkadot?"}, {"role": "assistant", "content": "```javascript\nreturn await investors('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the release schedule for Cardano?"}, {"role": "assistant", "content": "```javascript\nreturn await releaseSchedule('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 1-month price change for Solana?"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange1m('solana');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 1-year price change for Dogecoin?"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange1y('dogecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the market cap diluted for Binance Coin?"}, {"role": "assistant", "content": "```javascript\nreturn await marketCapDiluted('binance coin');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the 24-hour liquidity change for Uniswap?"}, {"role": "assistant", "content": "```javascript\nreturn await liquidityChange24h('uniswap');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the off-chain volume for Bitcoin?"}, {"role": "assistant", "content": "```javascript\nreturn await offChainVolume('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "Has Ethereum undergone a KYC process?"}, {"role": "assistant", "content": "```javascript\nreturn await kyc('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "Has Cardano been audited?"}, {"role": "assistant", "content": "```javascript\nreturn await audit('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "What are the total supply contracts for Chainlink?"}, {"role": "assistant", "content": "```javascript\nreturn await totalSupplyContracts('chainlink');\n```"}]}
+{"messages": [{"role": "user", "content": "What are the circulating supply addresses for Polkadot?"}, {"role": "assistant", "content": "```javascript\nreturn await circulatingSupplyAddresses('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the chat link for Solana?"}, {"role": "assistant", "content": "```javascript\nreturn await chat('solana');\n```"}]}
+{"messages": [{"role": "user", "content": "What's the description of Litecoin?"}, {"role": "assistant", "content": "```javascript\nreturn await description('litecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "Show me the price history data for Ripple (XRP)."}, {"role": "assistant", "content": "```javascript\nreturn await getPriceHistory('ripple');\n```"}]}
+{"messages": [{"role": "user", "content": "What's my portfolio's 7-day performance?"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.pnlTimelines['7d'];\n```"}]}
+{"messages": [{"role": "user", "content": "What's my portfolio's 1-year performance?"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.pnlTimelines['1y'];\n```"}]}
+{"messages": [{"role": "user", "content": "btc pric?"}, {"role": "assistant", "content": "```javascript\nreturn await price('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "eth newz"}, {"role": "assistant", "content": "```javascript\nreturn await renderCryptoPanicNews('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "ada marketcap"}, {"role": "assistant", "content": "```javascript\nreturn await marketCap('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "sol 24hr"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange24h('solana');\n```"}]}
+{"messages": [{"role": "user", "content": "doge suply"}, {"role": "assistant", "content": "```javascript\nreturn await totalSupply('dogecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "dot websit"}, {"role": "assistant", "content": "```javascript\nreturn await website('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "link volum"}, {"role": "assistant", "content": "```javascript\nreturn await volume7d('chainlink');\n```"}]}
+{"messages": [{"role": "user", "content": "xrp alltime hi"}, {"role": "assistant", "content": "```javascript\nreturn await ath('ripple');\n```"}]}
+{"messages": [{"role": "user", "content": "uni circulatin"}, {"role": "assistant", "content": "```javascript\nreturn await circulatingSupply('uniswap');\n```"}]}
+{"messages": [{"role": "user", "content": "ltc rankin"}, {"role": "assistant", "content": "```javascript\nreturn await rank('litecoin');\n```"}]}
+{"messages": [{"role": "user", "content": "bnb social"}, {"role": "assistant", "content": "```javascript\nreturn {\n  twitter: await twitter('binance coin'),\n  telegram: await telegram('binance coin'),\n  discord: await discord('binance coin')\n};\n```"}]}
+{"messages": [{"role": "user", "content": "balanse"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.balance;\n```"}]}
+{"messages": [{"role": "user", "content": "top 3"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.assetsList\n  .sort((a, b) => parseFloat(b.value) - parseFloat(a.value))\n  .slice(0, 3)\n  .map(asset => ({ name: asset.name, symbol: asset.symbol, value: asset.value }));\n```"}]}
+{"messages": [{"role": "user", "content": "pnl?"}, {"role": "assistant", "content": "```javascript\nreturn { realizedPNL: portfolioData.realizedPNL, unrealizedPNL: portfolioData.unrealizedPNL };\n```"}]}
+{"messages": [{"role": "user", "content": "30 day perf"}, {"role": "assistant", "content": "```javascript\nreturn portfolioData.pnlTimelines['30d'];\n```"}]}
+{"messages": [{"role": "user", "content": "eth 1 hr"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange1h('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "uni liquidty"}, {"role": "assistant", "content": "```javascript\nreturn await liquidity('uniswap');\n```"}]}
+{"messages": [{"role": "user", "content": "btc volum chng"}, {"role": "assistant", "content": "```javascript\nreturn await volumeChange24h('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "ada listd?"}, {"role": "assistant", "content": "```javascript\nreturn await isListed('cardano');\n```"}]}
+{"messages": [{"role": "user", "content": "dot 7 days"}, {"role": "assistant", "content": "```javascript\nreturn await priceChange7d('polkadot');\n```"}]}
+{"messages": [{"role": "user", "content": "link all time lo"}, {"role": "assistant", "content": "```javascript\nreturn await atl('chainlink');\n```"}]}
+{"messages": [{"role": "user", "content": "btc maximm"}, {"role": "assistant", "content": "```javascript\nreturn await maxSupply('bitcoin');\n```"}]}
+{"messages": [{"role": "user", "content": "eth tagz"}, {"role": "assistant", "content": "```javascript\nreturn await tags('ethereum');\n```"}]}
+{"messages": [{"role": "user", "content": "xrp distribushun"}, {"role": "assistant", "content": "```javascript\nreturn await distribution('ripple');\n```"}]}
+{"messages": [{"role": "user", "content": "dot investrs"}, {"role": "assistant", "content": "```javascript\nreturn await investors('polkadot');\n```"}]}

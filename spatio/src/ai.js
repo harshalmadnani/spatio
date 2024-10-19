@@ -246,6 +246,16 @@ const darkTheme = createTheme({
   },
 });
 
+// Define getTokenName as a global function
+const getTokenName = (input) => {
+  const lowercaseInput = input.toLowerCase();
+  const matchedCoin = coins.find(coin => 
+    coin.name.toLowerCase() === lowercaseInput || 
+    coin.symbol.toLowerCase() === lowercaseInput
+  );
+  return matchedCoin ? matchedCoin.name.toLowerCase() : input.toLowerCase();
+};
+
 function ChatInterface() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -830,7 +840,7 @@ To use this data in your responses, you should generate JavaScript code that acc
       const func = new Function(
         'data', 'selectedCoin', 'setSelectedCoin', 'getMarketData', 'getMetadata',
         'price', 'volume', 'marketCap', 'website', 'twitter', 'telegram', 'discord', 'description',
-        'portfolioData', 'renderCryptoPanicNews', 'historicPortfolioData',
+        'portfolioData', 'renderCryptoPanicNews', 'historicPortfolioData', 'getTokenName',
         `
           const { priceHistoryData, cryptoPanicNews, historicPortfolioData: historicData, walletPortfolio } = data;
           
@@ -838,39 +848,39 @@ To use this data in your responses, you should generate JavaScript code that acc
 
           const wrappedFunctions = {
             price: async (token) => {
-              const result = await price(token);
+              const result = await price(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             volume: async (token) => {
-              const result = await volume(token);
+              const result = await volume(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             marketCap: async (token) => {
-              const result = await marketCap(token);
+              const result = await marketCap(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             website: async (token) => {
-              const result = await website(token);
+              const result = await website(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             twitter: async (token) => {
-              const result = await twitter(token);
+              const result = await twitter(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             telegram: async (token) => {
-              const result = await telegram(token);
+              const result = await telegram(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             discord: async (token) => {
-              const result = await discord(token);
+              const result = await discord(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             description: async (token) => {
-              const result = await description(token);
+              const result = await description(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
-            priceHistoryData: async (token) => priceHistoryData?.[token] || 'please resend the prompt',
-            renderCryptoPanicNews: async (token) => renderCryptoPanicNews(token) || 'please resend the prompt',
+            priceHistoryData: async (token) => priceHistoryData?.[getTokenName(token)] || 'please resend the prompt',
+            renderCryptoPanicNews: async (token) => renderCryptoPanicNews(getTokenName(token)) || 'please resend the prompt',
           };
 
           const finalCode = \`${wrappedCode}\`.replace(
@@ -892,7 +902,7 @@ To use this data in your responses, you should generate JavaScript code that acc
           assetsList: portfolioAssetsList,
           pnlTimelines: portfolioPNLTimelines
         },
-        renderCryptoPanicNews, historicPortfolioData
+        renderCryptoPanicNews, historicPortfolioData, getTokenName
       );
       
       if (result === undefined) {
@@ -901,7 +911,7 @@ To use this data in your responses, you should generate JavaScript code that acc
       
       // Remove extra quotes from string results
       if (typeof result === 'string') {
-        return result.replace(/^"|"$/g, '' );
+        return result.replace(/^"|"$/g, '');
       }
       
       return JSON.stringify(result, null, 2);

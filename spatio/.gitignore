@@ -7,7 +7,7 @@
 .env
 # testing
 /coverage
-
+.yarn
 # production
 /build
 

@@ -297,10 +297,10 @@ function ChatInterface() {
     walletPortfolio: null,
   });
   useEffect(() => {
-    fetchPriceHistory(selectedCoin);
+    getPriceHistory(selectedCoin);
     fetchCryptoPanicData(selectedCoin);
-    fetchMarketData(selectedCoin);
-    fetchMetadata(selectedCoin);
+    getMarketData(selectedCoin);
+    getMetadata(selectedCoin);
     fetchHistoricPortfolioData();
     fetchWalletPortfolio();
   }, [selectedCoin, walletAddresses]);
@@ -389,17 +389,17 @@ function ChatInterface() {
   }, [searchTerm]);
 
   // Modify the fetch functions to use try-catch and update error state
-  const fetchPriceHistory = async (coinname = selectedCoin, from = null, to = null) => {
-    try {
-      if (!coinname) {
-        console.error('Attempted to fetch price history with undefined coinname');
-        setErrorSnackbar({
-          open: true,
-          message: 'Cannot fetch price history: Coin name is undefined'
-        });
-        return;
-      }
+  const fetchPriceHistory = async (coinname, from = null, to = null) => {
+    if (!coinname) {
+      console.error('Attempted to fetch price history with undefined coinname');
+      setErrorSnackbar({
+        open: true,
+        message: 'Cannot fetch price history: Coin name is undefined'
+      });
+      return null;
+    }
 
+    try {
       to = to || Date.now();
       from = from || to - 365 * 24 * 60 * 60 * 1000; // Default to 1 year if not provided
 
@@ -417,11 +417,8 @@ function ChatInterface() {
       });
 
       if (response.data && response.data.data && response.data.data.price_history) {
-        setPriceHistoryData(prevData => ({ 
-          ...prevData, 
-          [coinname]: response.data.data.price_history
-        }));
-        console.log(`Price history for ${coinname} updated successfully.`);
+        console.log(`Price history for ${coinname} fetched successfully.`);
+        return response.data.data.price_history;
       } else {
         console.error('Invalid price history data structure:', response.data);
         throw new Error('Invalid price history data structure');
@@ -433,7 +430,22 @@ function ChatInterface() {
         open: true, 
         message: `Failed to fetch price history for ${coinname}: ${error.message}`
       });
+      return null;
     }
+  };
+
+  const getPriceHistory = async (token) => {
+    if (!priceHistoryData[token]) {
+      const data = await fetchPriceHistory(token);
+      if (data) {
+        setPriceHistoryData(prevData => ({
+          ...prevData,
+          [token]: data
+        }));
+      }
+      return data;
+    }
+    return priceHistoryData[token] || null;
   };
 
   const fetchCryptoPanicData = async (coinname) => {
@@ -744,6 +756,7 @@ tags(token)
 distribution(token)
 investors(token)
 releaseSchedule(token)
+getPriceHistory(token)
 
 You also have access to the following portfolio-related data:
 
@@ -875,7 +888,7 @@ To use this data in your responses, you should generate JavaScript code that acc
       const wrappedCode = code.includes('function') ? code : `async function executeAICode() {\n${code}\n}\nexecuteAICode();`;
       
       const func = new Function(
-        'data', 'selectedCoin', 'setSelectedCoin', 'getMarketData', 'getMetadata',
+        'data', 'selectedCoin', 'setSelectedCoin', 'getMarketData', 'getMetadata', 'getPriceHistory',
         'price', 'volume', 'marketCap', 'website', 'twitter', 'telegram', 'discord', 'description',
         'portfolioData', 'renderCryptoPanicNews', 'historicPortfolioData', 'getTokenName',
         'liquidity', 'kyc', 'audit', 'totalSupplyContracts', 'totalSupply', 'circulatingSupply',
@@ -972,10 +985,14 @@ To use this data in your responses, you should generate JavaScript code that acc
               const result = await releaseSchedule(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
+            getPriceHistory: async (token) => {
+              const result = await getPriceHistory(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
           };
 
           const finalCode = \`${wrappedCode}\`.replace(
-            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule)\\(/g,
+            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory)\\(/g,
             'await wrappedFunctions.$1('
           );
 
@@ -984,7 +1001,7 @@ To use this data in your responses, you should generate JavaScript code that acc
       );
       
       const result = await func(
-        data, selectedCoin, setSelectedCoin, getMarketData, getMetadata,
+        data, selectedCoin, setSelectedCoin, getMarketData, getMetadata, getPriceHistory,
         price, volume, marketCap, website, twitter, telegram, discord, description,
         {
           balance: portfolioBalance,

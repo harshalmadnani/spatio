@@ -243,6 +243,32 @@ const styles: Styles = {
     position: 'absolute',
     right: '10px',
   },
+  jumperExchangeContainer: {
+    position: 'fixed',
+    bottom: '80px',
+    right: '20px',
+    width: '400px',
+    height: '600px',
+    backgroundColor: '#fff',
+    borderRadius: '10px',
+    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  jumperExchangeIframe: {
+    width: '100%',
+    height: '100%',
+    border: 'none',
+  },
+  closeJumperButton: {
+    padding: '10px',
+    backgroundColor: '#4a90e2',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '0 0 10px 10px',
+    cursor: 'pointer',
+  },
 };
 
 // Replace the OpenAI initialization with Groq
@@ -269,6 +295,7 @@ const getTokenName = (input: string): string => {
 };
 
 function ChatInterface() {
+  const [showJumperExchange, setShowJumperExchange] = useState(false);
   const { ready, authenticated, user, login, logout } = usePrivy();
   console.log('*****user*****:', user);
   const [input, setInput] = useState<string>('');
@@ -926,7 +953,9 @@ To use this data in your responses, you should generate JavaScript code that acc
 4. Always use optional chaining (?.) when accessing object properties.
 5. Always return a value.
 6. When sending a transaction, always ask for user confirmation before executing it.
-7. When someone asks whether they shoud buy/sell/hold a token, or why is a token dumping or pumping, fetch all data possible`
+7. When someone asks whether they shoud buy/sell/hold a token, or why is a token dumping or pumping, fetch all data possible
+
+When the user asks to trade or swap tokens, automatically open Jumper Exchange in a small webview within the chat interface. To do this, return a special command in your response: "OPEN_JUMPER_EXCHANGE".`
           },
           { 
             role: "user", 
@@ -940,10 +969,17 @@ To use this data in your responses, you should generate JavaScript code that acc
         stream: false,
       });
 
+      const response = chatCompletion.choices[0]?.message?.content || '';
+
+      if (response.includes("OPEN_JUMPER_EXCHANGE")) {
+        setShowJumperExchange(true);
+        return response.replace("OPEN_JUMPER_EXCHANGE", "I've opened Jumper Exchange for you in a small window below. You can use it to trade or swap tokens.");
+      }
+
       const inputTokenCount = chatCompletion.usage?.prompt_tokens;
       setInputTokens(inputTokenCount || 0);
 
-      return chatCompletion.choices[0]?.message?.content || '';
+      return response;
     } catch (error) {
       console.error('Error calling Groq API:', error);
       throw new Error('Failed to get AI response');
@@ -1637,7 +1673,21 @@ To use this data in your responses, you should generate JavaScript code that acc
         <div style={styles.messageList} ref={messageListRef}>
           {messages.map((message, index) => renderMessage(message, index))}
         </div>
-
+        {showJumperExchange && (
+          <div style={styles.jumperExchangeContainer}>
+            <iframe
+              src="https://jumper.exchange/?fromChain=137&fromToken=0x0000000000000000000000000000000000000000&toChain=137&toToken=0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+              title="Jumper Exchange"
+              style={styles.jumperExchangeIframe}
+            />
+            <button
+              onClick={() => setShowJumperExchange(false)}
+              style={styles.closeJumperButton}
+            >
+              Close Jumper Exchange
+            </button>
+          </div>
+        )}
       </div>
       <form onSubmit={handleSubmit} style={styles.inputForm}>
         <input

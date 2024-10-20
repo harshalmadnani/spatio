@@ -296,8 +296,6 @@ const getTokenName = (input: string): string => {
 
 function ChatInterface() {
   const [showJumperExchange, setShowJumperExchange] = useState(false);
-  const { ready, authenticated, user, login, logout } = usePrivy();
-  console.log('*****user*****:', user);
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -360,7 +358,17 @@ function ChatInterface() {
     }))
   }));
 // ... existing code ...
-
+const { user } = useDynamicContext();
+// const {primaryWallet} = useDynamicContext();
+useEffect(() => {
+  if (user) {
+    // console.log("wallet is available:", primaryWallet);
+    console.log("user is available:", user);
+  } else {
+    console.log("user is not available.");
+  }
+  
+}, [user]);
 const calculateSMA = (data: number[], period: number): number[] => {
   const sma: number[] = [];
   for (let i = period - 1; i < data.length; i++) {
@@ -398,7 +406,7 @@ const calculateMACD = (data, shortPeriod = 12, longPeriod = 26, signalPeriod = 9
 
   return { macdLine, signalLine, histogram };
 };
-
+const walletAddr = useDynamicContext().primaryWallet?.address;
 const calculateEMA = (data, period) => {
   const k = 2 / (period + 1);
   const ema = [data[0]];

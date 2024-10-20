@@ -11,9 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
-import {IHyperdrive} from '@delvtech/hyperdrive-artifacts/IHyperdrive'
-import * as fixedPoint from '@delvtech/fixed-point-wasm'
-fixedPoint.initSync(fixedPoint.wasmBuffer)
+import { IHyperdrive } from '@delvtech/hyperdrive-artifacts/IHyperdrive';
 
 const publicClient = createPublicClient({
   chain: mainnet,
@@ -24,21 +22,16 @@ const poolInfo = await publicClient.readContract({
   address: "0xd7e470043241C10970953Bd8374ee6238e77D735",
   abi: IHyperdrive.abi,
   functionName: "getPoolInfo",
-})
+});
 console.log('*****poolInfo*****:', poolInfo);
-// 2. Create a ReadHyperdrive instance
-// const hyperdrive = createReadHyperdrive({
-//   address: "0x...",
-//   publicClient,
-//   abi: 
-// });
 
-// 3. Get data from the contracts
-// const idleLiquidity = await hyperdrive.getIdleLiquidity();
+const DataContext = createContext<any>(null);
 
-const DataContext = createContext(null);
+interface Styles {
+  [key: string]: React.CSSProperties;
+}
 
-const styles = {
+const styles: Styles = {
   chatInterface: {
     width: '100vw',
     height: '100vh',
@@ -84,7 +77,7 @@ const styles = {
     borderRadius: '10px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     zIndex: 1000,
-    width: '400px', // Increase width to accommodate icons
+    width: '400px',
   },
   walletAddressItem: {
     display: 'flex',
@@ -246,7 +239,7 @@ const styles = {
     alignItems: 'center',
     fontFamily: 'SK-Modernist-Regular, sans-serif',
     fontSize: '14px',
-    position: 'relative', // Add this
+    position: 'relative',
   },
   announcementText: {
     flex: 1,
@@ -255,15 +248,15 @@ const styles = {
   closeButton: {
     cursor: 'pointer',
     color: 'black',
-    position: 'absolute', // Add this
-    right: '10px', // Add this
+    position: 'absolute',
+    right: '10px',
   },
 };
 
 const openai = new OpenAI({
-  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
-});
+    apiKey: process.env.REACT_APP_OPENAI_API_KEY as string,
+    dangerouslyAllowBrowser: true
+  });
 
 const darkTheme = createTheme({
   palette: {
@@ -272,7 +265,7 @@ const darkTheme = createTheme({
 });
 
 // Define getTokenName as a global function
-const getTokenName = (input) => {
+const getTokenName = (input: string): string => {
   const lowercaseInput = input.toLowerCase();
   const matchedCoin = coins.find(coin => 
     coin.name.toLowerCase() === lowercaseInput || 
@@ -282,62 +275,61 @@ const getTokenName = (input) => {
 };
 
 function ChatInterface() {
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [walletAddresses, setWalletAddresses] = useState(['0x7e3bbf75aba09833f899bb1fdd917fc3a5617555']);
-  const [newWalletAddress, setNewWalletAddress] = useState('');
-  const [showPopup, setShowPopup] = useState(false);
-  const [selectedToken, setSelectedToken] = useState(coins[0]);
-  const [selectedCoin, setSelectedCoin] = useState('bitcoin');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCoins, setFilteredCoins] = useState(coins);
-  const [inputTokens, setInputTokens] = useState(0);
-  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
-  const [showAnnouncement, setShowAnnouncement] = useState(true);
+  const [input, setInput] = useState<string>('');
+  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [walletAddresses, setWalletAddresses] = useState<string[]>(['0x7e3bbf75aba09833f899bb1fdd917fc3a5617555']);
+  const [newWalletAddress, setNewWalletAddress] = useState<string>('');
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [selectedToken, setSelectedToken] = useState<any>(coins[0]);
+  const [selectedCoin, setSelectedCoin] = useState<string>('bitcoin');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filteredCoins, setFilteredCoins] = useState<any[]>(coins);
+  const [inputTokens, setInputTokens] = useState<number>(0);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean>(false);
+  const [showAnnouncement, setShowAnnouncement] = useState<boolean>(true);
 
   // Create a data object to store all fetched data
-  const [data, setData] = useState({
+  const [data, setData] = useState<{
+    priceHistoryData: any;
+    cryptoPanicNews: any;
+    metadata: any;
+    historicPortfolioData: any;
+    walletPortfolio: any;
+  }>({
     priceHistoryData: null,
     cryptoPanicNews: null,
     metadata: null,
     historicPortfolioData: null,
     walletPortfolio: null,
   });
-  useEffect(() => {
-    getPriceHistory(selectedCoin);
-    fetchCryptoPanicData(selectedCoin);
-    getMarketData(selectedCoin);
-    getMetadata(selectedCoin);
-    getHistoricPortfolio(); // Changed from fetchHistoricPortfolioData
-    getWalletPortfolio(); // Changed from fetchWalletPortfolio
-  }, [selectedCoin, walletAddresses]);
+
   // Add a new state for error snackbar
-  const [errorSnackbar, setErrorSnackbar] = useState({ open: false, message: '' });
+  const [errorSnackbar, setErrorSnackbar] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
 
   // Add a new state for tracking API response time
-  const [responseTime, setResponseTime] = useState(null);
+  const [responseTime, setResponseTime] = useState<number | null>(null);
 
-  const messageListRef = useRef(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
 
-  const [marketData, setMarketData] = useState({});
-  const [metadata, setMetadata] = useState({});
-  const [totalWalletBalance, setTotalWalletBalance] = useState(0);
-  const [totalRealizedPNL, setTotalRealizedPNL] = useState(0);
-  const [totalUnrealizedPNL, setTotalUnrealizedPNL] = useState(0);
-  const [assets, setAssets] = useState([]);
-  const [totalPNLHistory, setTotalPNLHistory] = useState({});
-  const [isWalletPortfolioLoading, setIsWalletPortfolioLoading] = useState(true);
-  const [historicPortfolioData, setHistoricPortfolioData] = useState(null);
-  const [priceHistoryData, setPriceHistoryData] = useState({});
+  const [marketData, setMarketData] = useState<Record<string, any>>({});
+  const [metadata, setMetadata] = useState<Record<string, any>>({});
+  const [totalWalletBalance, setTotalWalletBalance] = useState<number>(0);
+  const [totalRealizedPNL, setTotalRealizedPNL] = useState<number>(0);
+  const [totalUnrealizedPNL, setTotalUnrealizedPNL] = useState<number>(0);
+  const [assets, setAssets] = useState<any[]>([]);
+  const [totalPNLHistory, setTotalPNLHistory] = useState<Record<string, any>>({});
+  const [isWalletPortfolioLoading, setIsWalletPortfolioLoading] = useState<boolean>(true);
+  const [historicPortfolioData, setHistoricPortfolioData] = useState<any>(null);
+  const [priceHistoryData, setPriceHistoryData] = useState<Record<string, any>>({});
 
-  const [isWalletDataLoading, setIsWalletDataLoading] = useState(false);
+  const [isWalletDataLoading, setIsWalletDataLoading] = useState<boolean>(false);
   // console.log('*****idle liquidity*****:', idleLiquidity);
   // Add this constant after the existing state declarations
-  const priceHistory = Object.entries(priceHistoryData).map(([coinName, data]) => ({
+  const priceHistory = Object.entries(priceHistoryData).map(([coinName, data]: [string, any]) => ({
     coinName,
-    data: data.map(item => ({
+    data: data.map((item: any) => ({
       date: new Date(item[0]),
       price: item[1],
       volume: item[2],
@@ -356,7 +348,7 @@ function ChatInterface() {
     value: asset.estimated_balance?.toFixed(2) ?? 'N/A'
   })) ?? [];
 
-  const portfolioPNLTimelines = Object.entries(totalPNLHistory).reduce((acc, [key, value]) => {
+  const portfolioPNLTimelines = Object.entries(totalPNLHistory).reduce((acc: Record<string, { realized: string; unrealized: string }>, [key, value]: [string, any]) => {
     acc[key] = {
       realized: value.realized?.toFixed(2) ?? 'N/A',
       unrealized: value.unrealized?.toFixed(2) ?? 'N/A'
@@ -382,7 +374,7 @@ function ChatInterface() {
   }, [searchTerm]);
 
   // Modify the fetch functions to use try-catch and update error state
-  const fetchPriceHistory = async (coinname, from = null, to = null) => {
+  const fetchPriceHistory = async (coinname: string, from: number | null = null, to: number | null = null) => {
     if (!coinname) {
       console.error('Attempted to fetch price history with undefined coinname');
       setErrorSnackbar({
@@ -427,7 +419,7 @@ function ChatInterface() {
     }
   };
 
-  const getPriceHistory = async (token) => {
+  const getPriceHistory = async (token: string) => {
     if (!priceHistoryData[token]) {
       const data = await fetchPriceHistory(token);
       if (data) {
@@ -441,7 +433,7 @@ function ChatInterface() {
     return priceHistoryData[token] || null;
   };
 
-  const fetchCryptoPanicData = async (coinname) => {
+  const fetchCryptoPanicData = async (coinname: string) => {
     try {
       if (!coinname) {
         console.error('Attempted to fetch CryptoPanic data with undefined coinname');
@@ -493,7 +485,7 @@ function ChatInterface() {
     }
   };
 
-  const fetchMarketData = async (coinname) => {
+  const fetchMarketData = async (coinname: string) => {
     if (!coinname) {
       console.error('Attempted to fetch market data with undefined coinname');
       setErrorSnackbar({
@@ -532,7 +524,7 @@ function ChatInterface() {
   };
 
   // Function to get market data for a specific coin
-  const getMarketData = async (token) => {
+  const getMarketData = async (token: string) => {
     if (!marketData[token]) {
       const data = await fetchMarketData(token);
       console.log('*****Market data*****:', data);
@@ -549,7 +541,7 @@ function ChatInterface() {
     return marketData[token] || null;
   };
 
-  const fetchMetadata = async (coinname) => {
+  const fetchMetadata = async (coinname: string) => {
     if (!coinname) {
       console.error('Attempted to fetch metadata with undefined coinname');
       setErrorSnackbar({
@@ -588,7 +580,7 @@ function ChatInterface() {
   };
 
   // Modify the getMetadata function
-  const getMetadata = async (token) => {
+  const getMetadata = async (token: string) => {
     if (!metadata[token]) {
       const data = await fetchMetadata(token);
       if (data) {
@@ -630,7 +622,7 @@ function ChatInterface() {
     return data.historicPortfolioData || null;
   };
 
-  const fetchWalletPortfolio = async (addresses) => {
+  const fetchWalletPortfolio = async (addresses: string[]) => {
     try {
       const url = `https://api.mobula.io/api/1/wallet/multi-portfolio`;
       const params = new URLSearchParams({
@@ -672,7 +664,7 @@ function ChatInterface() {
     }
   };
 
-  const fetchHistoricPortfolio = async (from = null, to = null, addresses) => {
+  const fetchHistoricPortfolio = async (from: number | null = null, to: number | null = null, addresses: string[]) => {
     try {
       to = to || Date.now();
       from = from || to - 365 * 24 * 60 * 60 * 1000; // Default to 1 year if not provided
@@ -680,8 +672,8 @@ function ChatInterface() {
       const url = `https://api.mobula.io/api/1/wallet/history`;
       const params = new URLSearchParams({
         wallets: addresses.join(','),
-        from: from,
-        to: to
+        from: from.toString(),
+        to: to.toString()
       });
 
       console.log(`Fetching historic portfolio data from: ${url}?${params.toString()}`);
@@ -711,11 +703,11 @@ function ChatInterface() {
   };
 
   // Function to get data based on the key
-  const getData = (key) => {
+  const getData = (key: string) => {
     return data[key];
   };
 
-  const callOpenAIAPI = async (userInput) => {
+  const callOpenAIAPI = async (userInput: string) => {
     try {
       // Prepare the portfolio data
       const portfolioData = {
@@ -728,7 +720,7 @@ function ChatInterface() {
           balance: asset.token_balance?.toFixed(6) || 'N/A',
           value: asset.estimated_balance?.toFixed(2) || 'N/A'
         })),
-        pnlTimelines: Object.entries(totalPNLHistory).reduce((acc, [key, value]) => {
+        pnlTimelines: Object.entries(totalPNLHistory).reduce((acc: Record<string, { realized: string; unrealized: string }>, [key, value]: [string, any]) => {
           acc[key] = {
             realized: value.realized?.toFixed(2) || 'N/A',
             unrealized: value.unrealized?.toFixed(2) || 'N/A'
@@ -826,18 +818,17 @@ To use this data in your responses, you should generate JavaScript code that acc
         presence_penalty: 0,
       });
 
-      // Calculate and set input tokens
-      const inputTokenCount = response.usage.prompt_tokens;
-      setInputTokens(inputTokenCount);
+      const inputTokenCount = response.usage?.prompt_tokens;
+      setInputTokens(inputTokenCount || 0);
 
-      return response.choices[0].message.content;
+      return response.choices[0]?.message?.content || '';
     } catch (error) {
       console.error('Error calling OpenAI API:', error);
       throw new Error('Failed to get AI response');
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -856,20 +847,20 @@ To use this data in your responses, you should generate JavaScript code that acc
       const initialAiResponse = await callOpenAIAPI(userInput);
       console.log('Initial response from GPT-4o-mini:', initialAiResponse);
 
-      const processResponse = async (response) => {
+      const processResponse = async (response: string, userInput: string): Promise<string> => {
         const codeMatch = response.match(/```javascript\n([\s\S]*?)\n```/);
         if (codeMatch && codeMatch[1]) {
           const code = codeMatch[1];
           const executionStartTime = Date.now();
-          let result;
+          let result: any;
           const maxExecutionTime = 5000; // 5 seconds
 
-          const executionPromise = new Promise(async (resolve) => {
+          const executionPromise = new Promise<void>(async (resolve) => {
             result = await executeCode(codeMatch[1]);
             resolve();
           });
 
-          const timeoutPromise = new Promise((_, reject) => {
+          const timeoutPromise = new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Execution timed out')), maxExecutionTime);
           });
 
@@ -892,20 +883,20 @@ To use this data in your responses, you should generate JavaScript code that acc
             presence_penalty: 0,
           });
 
-          console.log('Final response from GPT-4o-mini:', finalResponse.choices[0].message.content);
+          console.log('Final response from GPT-4o-mini:', finalResponse.choices[0]?.message?.content);
 
-          return finalResponse.choices[0].message.content;
+          return finalResponse.choices[0]?.message?.content || '';
         }
         return response;
       };
 
-      const processedResponse = await processResponse(initialAiResponse);
+      const processedResponse = await processResponse(initialAiResponse, userInput);
       setMessages(prev => [...prev, { role: 'assistant', content: processedResponse }]);
 
       const endTime = Date.now();
       setResponseTime(endTime - startTime);
 
-    } catch (error) {
+    } catch (error: any) {
       setError(error.message);
       setErrorSnackbar({ open: true, message: error.message });
     } finally {
@@ -914,7 +905,7 @@ To use this data in your responses, you should generate JavaScript code that acc
   };
 
   // Function to execute the code generated by GPT
-  const executeCode = async (code) => {
+  const executeCode = async (code: string): Promise<any> => {
     try {
       const wrappedCode = code.includes('function') ? code : `async function executeAICode() {\n${code}\n}\nexecuteAICode();`;
       
@@ -923,7 +914,7 @@ To use this data in your responses, you should generate JavaScript code that acc
         'price', 'volume', 'marketCap', 'website', 'twitter', 'telegram', 'discord', 'description',
         'portfolioData', 'renderCryptoPanicNews', 'historicPortfolioData', 'getTokenName',
         'liquidity', 'kyc', 'audit', 'totalSupplyContracts', 'totalSupply', 'circulatingSupply',
-        'circulatingSupplyAddresses', 'maxSupply', 'chat', 'tags', 'distribution', 'investors', 'releaseSchedule',
+        'circulatingSupplyAddresses', 'maxSupply', 'chat', 'tags', 'distribution', 'investors', 'releaseSchedule', 'getPriceHistory',
         `
           const { priceHistoryData, cryptoPanicNews, historicPortfolioData: historicData, walletPortfolio } = data;
           
@@ -1022,8 +1013,6 @@ To use this data in your responses, you should generate JavaScript code that acc
             },
           };
 
-          // Use the existing portfolioData instead of declaring it again
-          
           const finalCode = \`${wrappedCode}\`.replace(
             /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory)\\(/g,
             'await wrappedFunctions.$1('
@@ -1033,7 +1022,7 @@ To use this data in your responses, you should generate JavaScript code that acc
         `
       );
       
-      const result = await func(
+      return await func(
         data, selectedCoin, setSelectedCoin, getMarketData, getMetadata, getPriceHistory,
         price, volume, marketCap, website, twitter, telegram, discord, description,
         {
@@ -1058,25 +1047,14 @@ To use this data in your responses, you should generate JavaScript code that acc
         liquidity, kyc, audit, totalSupplyContracts, totalSupply, circulatingSupply,
         circulatingSupplyAddresses, maxSupply, chat, tags, distribution, investors, releaseSchedule
       );
-      
-      if (result === undefined) {
-        throw new Error('Execution result is undefined. Make sure the code returns a value.');
-      }
-      
-      // Remove extra quotes from string results
-      if (typeof result === 'string') {
-        return result.replace(/^"|"$/g, '');
-      }
-      
-      return JSON.stringify(result, null, 2);
     } catch (error) {
       console.error('Error executing code:', error);
-      return `Error: ${error.message}`;
+      return `Error: ${error.message}. Please try rephrasing your question.`;
     }   
   };
 
   // Modify the renderMessage function to include response time
-  const renderMessage = (message, index) => {
+  const renderMessage = (message: { role: string; content: string }, index: number) => {
     let content = message.content;
     
     content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -1125,7 +1103,7 @@ To use this data in your responses, you should generate JavaScript code that acc
     setNewWalletAddress('');
   };
 
-  const handleRemoveWalletAddress = async (index) => {
+  const handleRemoveWalletAddress = async (index: number) => {
     const updatedAddresses = walletAddresses.filter((_, i) => i !== index);
     await updateWalletAddresses(updatedAddresses);
   };
@@ -1146,7 +1124,7 @@ To use this data in your responses, you should generate JavaScript code that acc
     }
   };
 
-  const updateWalletAddresses = async (updatedAddresses) => {
+  const updateWalletAddresses = async (updatedAddresses: string[]) => {
     setIsWalletDataLoading(true);
 
     try {
@@ -1182,12 +1160,12 @@ To use this data in your responses, you should generate JavaScript code that acc
   };
 
   // Add this new function to handle search input
-  const handleSearchChange = (event) => {
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
   // Add a function to handle closing the error snackbar
-  const handleCloseErrorSnackbar = (event, reason) => {
+  const handleCloseErrorSnackbar = (event: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return;
     }
@@ -1195,218 +1173,218 @@ To use this data in your responses, you should generate JavaScript code that acc
   };
 
   // Modify these functions to return Promises
-  const website = async (token) => {
+  const website = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Website*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.website || 'N/A';
   };
-  const twitter = async (token) => {
+  const twitter = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Twitter*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.twitter || 'N/A';
   };
-  const telegram = async (token) => {
+  const telegram = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Telegram*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.telegram || 'N/A';
   };
-  const discord = async (token) => {
+  const discord = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Discord*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.discord || 'N/A';
   };
-  const description = async (token) => {
+  const description = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Description*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.description || 'N/A';
   };
-  const price = async (token) => {
+  const price = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Price*****:', data);
     if (!data) return 'please resend the prompt';
     return data.price !== undefined ? `$${data.price.toFixed(2)}` : 'N/A';
   };
-  const volume = async (token) => {
+  const volume = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Volume*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.volume !== undefined ? `$${metadata.volume.toFixed(2)}` : 'N/A';
   };
-  const marketCap = async (token) => {
+  const marketCap = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Market Cap*****:', data);
     if (!data) return 'please resend the prompt';
     return data.market_cap !== undefined ? `$${data.market_cap.toFixed(2)}` : 'N/A';
   };
-  const marketCapDiluted = async (token) => {
+  const marketCapDiluted = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Market Cap Diluted*****:', data);
     if (!data) return 'please resend the prompt';
     return data.market_cap_diluted !== undefined ? `$${data.market_cap_diluted.toFixed(2)}` : 'N/A';
   };
-  const liquidity = async (token) => {
+  const liquidity = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Liquidity*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.liquidity !== undefined ? `$${metadata.liquidity.toFixed(2)}` : 'N/A';
   };
-  const liquidityChange24h = async (token) => {
+  const liquidityChange24h = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Liquidity Change 24h*****:', data);
     if (!data) return 'please resend the prompt';
     return data.liquidity_change_24h !== undefined ? `${data.liquidity_change_24h.toFixed(2)}%` : 'N/A';
   };
-  const offChainVolume = async (token) => {
+  const offChainVolume = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Off Chain Volume*****:', data);
     if (!data) return 'please resend the prompt';
     return data.off_chain_volume !== undefined ? `$${data.off_chain_volume.toFixed(2)}` : 'N/A';
   };
-  const volume7d = async (token) => {
+  const volume7d = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Volume 7d*****:', data);
     if (!data) return 'please resend the prompt';
     return data.volume_7d !== undefined ? `$${data.volume_7d.toFixed(2)}` : 'N/A';
   };
-  const volumeChange24h = async (token) => {
+  const volumeChange24h = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Volume Change 24h*****:', data);
     if (!data) return 'please resend the prompt';
     return data.volume_change_24h !== undefined ? `${data.volume_change_24h.toFixed(2)}%` : 'N/A';
   };
-  const isListed = async (token) => {
+  const isListed = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Is Listed*****:', data);
     if (!data) return 'please resend the prompt';
     return data.is_listed !== undefined ? (data.is_listed ? 'Yes' : 'No') : 'N/A';
   };
-  const priceChange24h = async (token) => {
+  const priceChange24h = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Price Change 24h*****:', data);
     if (!data) return 'please resend the prompt';
     return data.price_change_24h !== undefined ? `${data.price_change_24h.toFixed(2)}%` : 'N/A';
   };
-  const priceChange1h = async (token) => {
+  const priceChange1h = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Price Change 1h*****:', data);
     if (!data) return 'please resend the prompt';
     return data.price_change_1h !== undefined ? `${data.price_change_1h.toFixed(2)}%` : 'N/A';
   };
-  const priceChange7d = async (token) => {
+  const priceChange7d = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Price Change 7d*****:', data);
     if (!data) return 'please resend the prompt';
     return data.price_change_7d !== undefined ? `${data.price_change_7d.toFixed(2)}%` : 'N/A';
   };
-  const priceChange1m = async (token) => {
+  const priceChange1m = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Price Change 1m*****:', data);
     if (!data) return 'please resend the prompt';
     return data.price_change_1m !== undefined ? `${data.price_change_1m.toFixed(2)}%` : 'N/A';
   };
-  const priceChange1y = async (token) => {
+  const priceChange1y = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Price Change 1y*****:', data);
     if (!data) return 'please resend the prompt';
     return data.price_change_1y !== undefined ? `${data.price_change_1y.toFixed(2)}%` : 'N/A';
   };
 
-  const ath = async (token) => {
+  const ath = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****ATH*****:', data);
     if (!data) return 'please resend the prompt';
     return data.ath !== undefined ? `$${data.ath.toFixed(2)}` : 'N/A';
   };
-  const atl = async (token) => {
+  const atl = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****ATL*****:', data);
     if (!data) return 'please resend the prompt';
     return data.atl !== undefined ? `$${data.atl.toFixed(2)}` : 'N/A';
   };
-  const rank = async (token) => {
+  const rank = async (token: string) => {
     const data = await getMarketData(token);
     console.log('*****Rank*****:', data);
     if (!data) return 'please resend the prompt';
     return data.rank !== undefined ? data.rank : 'N/A';
   };
-  const totalSupply = async (token) => {
+  const totalSupply = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Total Supply*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.total_supply !== undefined ? metadata.total_supply.toFixed(0) : 'N/A';
   };
-  const circulatingSupply = async (token) => {
+  const circulatingSupply = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Circulating Supply*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.circulating_supply !== undefined ? metadata.circulating_supply.toFixed(0) : 'N/A';
   };
-  const kyc = async (token) => {
+  const kyc = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****KYC*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.kyc || 'N/A';
   };
-  const audit = async (token) => {
+  const audit = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Audit*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.audit || 'N/A';
   };
-  const totalSupplyContracts = async (token) => {
+  const totalSupplyContracts = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Total Supply Contracts*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.total_supply_contracts?.join(', ') || 'N/A';
   };
-  const circulatingSupplyAddresses = async (token) => {
+  const circulatingSupplyAddresses = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Circulating Supply Addresses*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.circulating_supply_addresses?.join(', ') || 'N/A';
   };
-  const maxSupply = async (token) => {
+  const maxSupply = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Max Supply*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.max_supply !== undefined ? metadata.max_supply.toFixed(0) : 'N/A';
   };
-  const chat = async (token) => {
+  const chat = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Chat*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.chat || 'N/A';
   };
-  const tags = async (token) => {
+  const tags = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Tags*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.tags?.join(', ') || 'N/A';
   };
-  const distribution = async (token) => {
+  const distribution = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Distribution*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.distribution?.map(d => `${d.name}: ${d.percentage}%`).join(', ') || 'N/A';
   };
-  const investors = async (token) => {
+  const investors = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Investors*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.investors?.map(i => i.name).join(', ') || 'N/A';
   };
-  const releaseSchedule = async (token) => {
+  const releaseSchedule = async (token: string) => {
     const metadata = await getMetadata(token);
     console.log('*****Release Schedule*****:', metadata);
     if (!metadata) return 'please resend the prompt';
     return metadata.release_schedule?.join(', ') || 'N/A';
   };
-  const renderCryptoPanicNews = async (coinname) => {
+  const renderCryptoPanicNews = async (coinname: string) => {
     try {
       if (!coinname) {
         console.error('Attempted to fetch CryptoPanic data with undefined coinname');

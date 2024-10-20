@@ -903,7 +903,7 @@ To use this data in your responses, you should generate JavaScript code that acc
             content: userInput 
           }
         ],
-        model: "llama-3.1-70b-versatile",
+        model: "llama3-8b-8192",
         temperature: 0.7,
         max_tokens: 3000,
         top_p: 1,
@@ -964,7 +964,7 @@ To use this data in your responses, you should generate JavaScript code that acc
             messages: [
               { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}`  }
             ],
-            model: "llama-3.1-70b-versatile",
+            model: "llama3-8b-8192",
             temperature: 0.7,
             max_tokens: 3000,
             top_p: 1,
@@ -1617,7 +1617,17 @@ To use this data in your responses, you should generate JavaScript code that acc
               : 'Add Wallet'}
             {walletAddresses.length > 1 && ` (+${walletAddresses.length - 1})`}
           </div>
-         
+          <Button
+            variant="contained"
+            onClick={handleSendPOL}
+            style={{
+              backgroundColor: '#4a90e2',
+              color: 'white',
+              marginLeft: '10px'
+            }}
+          >
+            Send 0.001 POL to Self
+          </Button>
         </div>
       </div>
       <div style={styles.messageListContainer}>

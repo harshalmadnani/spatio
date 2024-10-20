@@ -34,7 +34,8 @@ function App() {
          
         </>
       )}
-          {!isLoggedIn && (<DynamicWidget />)}
+  <DynamicWidget />
+          {}
           {isLoggedIn && (
             <>
               <ChatInterface />

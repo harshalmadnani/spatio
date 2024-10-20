@@ -296,8 +296,8 @@ const getTokenName = (input: string): string => {
 
 function ChatInterface() {
   const [showJumperExchange, setShowJumperExchange] = useState(false);
-  // const { ready, authenticated, user, login, logout } = usePrivy();
-  // console.log('*****user*****:', user);
+  const { ready, authenticated, user, login, logout } = usePrivy();
+  console.log('*****user*****:', user);
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -312,7 +312,7 @@ function ChatInterface() {
   const [inputTokens, setInputTokens] = useState<number>(0);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean>(false);
   const [showAnnouncement, setShowAnnouncement] = useState<boolean>(true);
-  const [newsData, setNewsData] = useState<Record<string, any>>({});  
+  const [newsData, setNewsData] = useState<Record<string, any>>({});
   // Create a data object to store all fetched data
   const [data, setData] = useState<{
     priceHistoryData: any;
@@ -359,19 +359,7 @@ function ChatInterface() {
       marketCap: item[3]
     }))
   }));
-
-  const { user } = useDynamicContext();
-  // const {primaryWallet} = useDynamicContext();
-  useEffect(() => {
-    if (user) {
-      // console.log("wallet is available:", primaryWallet);
-      console.log("user is available:", user);
-    } else {
-      console.log("user is not available.");
-    }
-    
-  }, [user]);
-
+// ... existing code ...
 
 const calculateSMA = (data: number[], period: number): number[] => {
   const sma: number[] = [];

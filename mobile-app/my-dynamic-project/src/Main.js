@@ -1,7 +1,7 @@
 import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useState, useEffect } from "react";
-import DynamicMethods from "./Methods.js";
 import ChatInterface from "./ai.js";
+import TransactionSigner from "./TransactionSigner.js";
 import "./Main.css";
 
 const checkIsDarkSchemePreferred = () =>
@@ -10,7 +10,7 @@ const checkIsDarkSchemePreferred = () =>
 const Main = () => {
   const [isDarkMode, setIsDarkMode] = useState(checkIsDarkSchemePreferred);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const { user } = useDynamicContext();
+  const { user, wallet } = useDynamicContext();
 
   useEffect(() => {
     const darkModeMediaQuery = window.matchMedia(
@@ -23,31 +23,38 @@ const Main = () => {
   }, []);
 
   useEffect(() => {
+    if (user) {
+      console.log("User is logged in:", user);
+    } else {
+      console.log("User is not logged in.");
+    }
+    if (wallet) {
+      console.log("Wallet is available:", wallet);
+    } else {
+      console.log("Wallet is not available.");
+    }
+  }, [user, wallet]);
+
+  useEffect(() => {
     setIsLoggedIn(!!user);
   }, [user]);
-
-  // Function to handle login status change
-  const handleLoginStatusChange = (status) => {
-    setIsLoggedIn(status);
-  };
 
   return (
     <>
       <div className={`container ${isDarkMode ? "dark" : "light"}`}>
         <div className="content-wrapper">
-          <div className="modal auth-section">
-            <DynamicWidget
-              onAuthSuccess={() => setIsLoggedIn(true)}
-              onLogout={() => setIsLoggedIn(false)}
-            />
-            {/*<DynamicMethods
-              isDarkMode={isDarkMode}
-              onLoginStatusChange={handleLoginStatusChange}
-            />*/}
-          </div>
-          {isLoggedIn && (
+          {!isLoggedIn && (
+            <div className="modal auth-section">
+              <DynamicWidget
+                onAuthSuccess={() => setIsLoggedIn(true)}
+                onLogout={() => setIsLoggedIn(false)}
+              />
+            </div>
+          )}
+          {isLoggedIn && wallet && (
             <div className="chat-interface-wrapper reduced-width">
               <ChatInterface />
+              <TransactionSigner wallet={wallet} />
             </div>
           )}
         </div>

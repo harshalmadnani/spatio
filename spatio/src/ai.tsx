@@ -13,6 +13,8 @@ import { parseEther } from "viem";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isEthereumWallet } from "@dynamic-labs/ethereum";
 import { Groq } from 'groq-sdk';
+import { LiFiWidget, WidgetConfig } from '@lifi/widget';
+
 
 
 const DataContext = createContext<any>(null);
@@ -1595,12 +1597,12 @@ To use this data in your responses, you should generate JavaScript code that acc
   return (
     <div style={styles.chatInterface}>
       {renderDisclaimerDialog()}
-      {showAnnouncement && (
+      {/* {showAnnouncement && (
         <div style={styles.announcementBar}>
           <span style={styles.announcementText}>spatio AI can only answer questions related to your portfolio right now!</span>
           <CloseIcon style={styles.closeButton} onClick={handleCloseAnnouncement} />
         </div>
-      )}
+      )} */}
       <div style={{
         ...styles.header,
         justifyContent: 'space-between',

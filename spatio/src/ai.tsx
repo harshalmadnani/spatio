@@ -492,6 +492,31 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
     return priceHistoryData[token] || null;
   };
 
+  // Modify the existing getPriceHistory function to include technical analysis
+  const getPriceHistoryWithAnalysis = async (token: string) => {
+    const priceHistory = await getPriceHistory(token);
+    if (priceHistory) {
+      const prices = priceHistory.map(item => item[1]);
+      const sma20 = calculateSMA(prices, 20);
+      const ema50 = calculateEMA(prices, 50);
+      const rsi14 = calculateRSI(prices, 14);
+      const macd = calculateMACD(prices);
+      const bollingerBands = calculateBollingerBands(prices);
+
+      return {
+        priceHistory,
+        technicalIndicators: {
+          sma20,
+          ema50,
+          rsi14,
+          macd,
+          bollingerBands
+        }
+      };
+    }
+    return null;
+  };
+
   const fetchCryptoPanicNews = async (coinname: string) => {
     try {
       if (!coinname) {
@@ -868,6 +893,8 @@ releaseSchedule(token)
 getPriceHistory(token)
 getNews(token)
 
+For technical analysis, use the getPriceHistoryWithAnalysis(token) function. This function provides price history data along with various technical indicators such as SMA, EMA, RSI, MACD, and Bollinger Bands. Use this function when asked about technical analysis or when detailed price history and indicators are needed.
+
 You also have access to the following portfolio-related data:
 
 portfolioData.balance: The total balance of the user's portfolio.
@@ -895,7 +922,7 @@ To use this function in your responses, you should generate JavaScript code that
 To use this data in your responses, you should generate JavaScript code that accesses and processes this data as needed. The code you generate will be executed by our system to provide the answer. Please format your response as follows:
 1. Include the JavaScript code within a code block, starting with \`\`\`javascript and ending with \`\`\`.
 2. The last line of your code should return the processed data.
-3. Don't show any comments.
+3. Don't show any comments OR ANYTHING EXCEPT CODE
 4. Always use optional chaining (?.) when accessing object properties.
 5. Always return a value.
 6. When sending a transaction, always ask for user confirmation before executing it.
@@ -965,7 +992,7 @@ To use this data in your responses, you should generate JavaScript code that acc
           // Make a direct call to Groq API without the system prompt
           const finalResponse = await groq.chat.completions.create({
             messages: [
-              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}`  }
+              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result} and dont return code as answer and give concreate answer, nor do you have to explain what you are doing nor repeat the users queries, give concreate answers`   }
             ],
             model: "llama3-8b-8192",
             temperature: 0.7,
@@ -1001,7 +1028,7 @@ To use this data in your responses, you should generate JavaScript code that acc
       const wrappedCode = code.includes('function') ? code : `async function executeAICode() {\n${code}\n}\nexecuteAICode();`;
       
       const func = new Function(
-        'data', 'selectedCoin', 'setSelectedCoin', 'getMarketData', 'getMetadata', 'getPriceHistory',
+        'data', 'selectedCoin', 'setSelectedCoin', 'getMarketData', 'getMetadata', 'getPriceHistoryWithAnalysis',
         'price', 'volume', 'marketCap', 'website', 'twitter', 'telegram', 'discord', 'description',
         'portfolioData', 'getNews', 'historicPortfolioData', 'getTokenName',
         'liquidity', 'kyc', 'audit', 'totalSupplyContracts', 'totalSupply', 'circulatingSupply',
@@ -1102,26 +1129,9 @@ To use this data in your responses, you should generate JavaScript code that acc
               const result = await releaseSchedule(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
             },
-            getPriceHistory: async (token) => {
-              const result = await getPriceHistory(getTokenName(token));
-              if (isLoaded(result)) {
-                const prices = result.map(item => item[1]);
-                const sma20 = calculateSMA(prices, 20);
-                const rsi14 = calculateRSI(prices, 14);
-                const macd = calculateMACD(prices);
-                const bollingerBands = calculateBollingerBands(prices);
-                return {
-                  priceHistory: result,
-                  technicalIndicators: {
-                    sma20: sma20,
-                    rsi14: rsi14,
-                    macd: macd,
-                    bollingerBands: bollingerBands
-                  }
-                };
-              } else {
-                return 'please resend the prompt';
-              }
+            getPriceHistoryWithAnalysis: async (token) => {
+              const result = await getPriceHistoryWithAnalysis(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
             },
             sendTransaction: async (to, amount) => {
               try {
@@ -1134,7 +1144,7 @@ To use this data in your responses, you should generate JavaScript code that acc
           };
 
           const finalCode = \`${wrappedCode}\`.replace(
-            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|getNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory|sendTransaction)\\(/g,
+            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|getNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistoryWithAnalysis|sendTransaction)\\(/g,
             'await wrappedFunctions.$1('
           );
 
@@ -1143,7 +1153,7 @@ To use this data in your responses, you should generate JavaScript code that acc
       );
       
       return await func(
-        data, selectedCoin, setSelectedCoin, getMarketData, getMetadata, getPriceHistory,
+        data, selectedCoin, setSelectedCoin, getMarketData, getMetadata, getPriceHistoryWithAnalysis,
         price, volume, marketCap, website, twitter, telegram, discord, description,
         {
           balance: portfolioBalance,

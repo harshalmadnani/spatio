@@ -1617,17 +1617,7 @@ To use this data in your responses, you should generate JavaScript code that acc
               : 'Add Wallet'}
             {walletAddresses.length > 1 && ` (+${walletAddresses.length - 1})`}
           </div>
-          <Button
-            variant="contained"
-            onClick={handleSendPOL}
-            style={{
-              backgroundColor: '#4a90e2',
-              color: 'white',
-              marginLeft: '10px'
-            }}
-          >
-            Send 0.001 POL to Self
-          </Button>
+         
         </div>
       </div>
       <div style={styles.messageListContainer}>

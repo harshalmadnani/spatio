@@ -7,9 +7,6 @@ const TransactionSigner = ({ wallet }) => {
 
   useEffect(() => {
     console.log("Wallet object:", wallet); // Log the wallet object for debugging
-    if (wallet) {
-      console.log("Wallet provider:", wallet.provider); // Log the provider if available
-    }
   }, [wallet]);
 
   const requestTransaction = () => {
@@ -27,14 +24,12 @@ const TransactionSigner = ({ wallet }) => {
     }
 
     try {
-      if (!wallet || !wallet.provider) {
-        throw new Error("Wallet provider is not available");
-      }
-
-      console.log("Using provider to sign transaction..."); // Debugging statement
-      const provider = new ethers.BrowserProvider(wallet.provider); // Use BrowserProvider
-      const signer = provider.getSigner();
-      const txResponse = await signer.sendTransaction(pendingTransaction);
+      console.log("Using wallet to sign transaction..."); // Debugging statement
+      const provider = ethers.getDefaultProvider(); // Use a default provider
+      const connectedWallet = wallet.connect(provider);
+      const txResponse = await connectedWallet.sendTransaction(
+        pendingTransaction
+      );
       console.log("Transaction sent:", txResponse);
       setPendingTransaction(null);
     } catch (error) {

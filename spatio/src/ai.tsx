@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import OpenAI from "openai";
 import { coins } from './coins';
 import { Select, MenuItem, InputAdornment, createTheme, ThemeProvider, Alert, Snackbar, Typography, Paper, Link } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';     
@@ -9,21 +8,12 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
-import { IHyperdrive } from '@delvtech/hyperdrive-artifacts/IHyperdrive';
+import { usePrivy } from "@privy-io/react-auth";
+import { parseEther } from "viem";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { isEthereumWallet } from "@dynamic-labs/ethereum";
+import { Groq } from 'groq-sdk';
 
-const publicClient = createPublicClient({
-  chain: mainnet,
-  transport: http(),
-});
-
-const poolInfo = await publicClient.readContract({
-  address: "0xd7e470043241C10970953Bd8374ee6238e77D735",
-  abi: IHyperdrive.abi,
-  functionName: "getPoolInfo",
-});
-console.log('*****poolInfo*****:', poolInfo);
 
 const DataContext = createContext<any>(null);
 
@@ -253,10 +243,11 @@ const styles: Styles = {
   },
 };
 
-const openai = new OpenAI({
-    apiKey: process.env.REACT_APP_OPENAI_API_KEY as string,
-    dangerouslyAllowBrowser: true
-  });
+// Replace the OpenAI initialization with Groq
+const groq = new Groq({
+  apiKey: process.env.REACT_APP_GROQ_API_KEY as string,
+  dangerouslyAllowBrowser: true
+});
 
 const darkTheme = createTheme({
   palette: {
@@ -275,6 +266,8 @@ const getTokenName = (input: string): string => {
 };
 
 function ChatInterface() {
+  const { ready, authenticated, user, login, logout } = usePrivy();
+  console.log('*****user*****:', user);
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -336,6 +329,69 @@ function ChatInterface() {
       marketCap: item[3]
     }))
   }));
+// ... existing code ...
+
+const calculateSMA = (data: number[], period: number): number[] => {
+  const sma: number[] = [];
+  for (let i = period - 1; i < data.length; i++) {
+    const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+    sma.push(sum/period);
+  }
+  return sma;
+};
+const calculateRSI = (data, period = 14) => {
+  const changes = data.slice(1).map((price, index) => price - data[index]);
+  const gains = changes.map(change => change > 0 ? change : 0);
+  const losses = changes.map(change => change < 0 ? -change : 0);
+
+  let avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  let avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
+
+  const rsi = [100 - (100 / (1 + avgGain / avgLoss))];
+
+  for (let i = period; i < data.length - 1; i++) {
+    const newAvgGain = (avgGain * (period - 1) + gains[i]) / period;
+    const newAvgLoss = (avgLoss * (period - 1) + losses[i]) / period;
+    rsi.push(100 - (100 / (1 + newAvgGain / newAvgLoss)));
+    avgGain = newAvgGain;
+    avgLoss = newAvgLoss;
+  }
+
+  return rsi;
+};
+const calculateMACD = (data, shortPeriod = 12, longPeriod = 26, signalPeriod = 9) => {
+  const shortEMA = calculateEMA(data, shortPeriod);
+  const longEMA = calculateEMA(data, longPeriod);
+  const macdLine = shortEMA.map((short, i) => short - longEMA[i]);
+  const signalLine = calculateEMA(macdLine, signalPeriod);
+  const histogram = macdLine.map((macd, i) => macd - signalLine[i]);
+
+  return { macdLine, signalLine, histogram };
+};
+
+const calculateEMA = (data, period) => {
+  const k = 2 / (period + 1);
+  const ema = [data[0]];
+  for (let i = 1; i < data.length; i++) {
+    ema.push(data[i] * k + ema[i - 1] * (1 - k));
+  }
+  return ema;
+};
+
+const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) => {
+  const sma = calculateSMA(data, period);
+  const upperBand: number[] = [];
+  const lowerBand: number[] = [];
+
+  for (let i = period - 1; i < data.length; i++) {
+    const slice = data.slice(i - period + 1, i + 1);
+    const std = Math.sqrt(slice.reduce((sum, x) => sum + Math.pow(x - sma[i - period + 1], 2), 0) / period);
+    upperBand.push(sma[i - period + 1] + multiplier * std);
+    lowerBand.push(sma[i - period + 1] - multiplier * std);
+  }
+
+  return { upperBand, middleBand: sma, lowerBand };
+};
 
   const portfolioBalance = totalWalletBalance?.toFixed(2) ?? 'N/A';
   const portfolioRealizedPNL = totalRealizedPNL?.toFixed(2) ?? 'N/A';
@@ -707,7 +763,31 @@ function ChatInterface() {
     return data[key];
   };
 
-  const callOpenAIAPI = async (userInput: string) => {
+  const { primaryWallet } = useDynamicContext();
+
+  // Add this function to send a transaction
+  const sendTransaction = async (to: string, amount: string, token: string) => {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+      throw new Error("No Ethereum wallet connected");
+    }
+
+    const walletClient = await primaryWallet.getWalletClient();
+    const transaction = {
+      to: to as `0x${string}`,
+      value: parseEther(amount),
+    };
+
+    try {
+      const hash = await walletClient.sendTransaction(transaction);
+      return hash;
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      throw error;
+    }
+  };
+
+  // Replace the callOpenAIAPI function with callGroqAPI
+  const callGroqAPI = async (userInput: string) => {
     try {
       // Prepare the portfolio data
       const portfolioData = {
@@ -729,8 +809,7 @@ function ChatInterface() {
         }, {})
       };
 
-      const response = await openai.chat.completions.create({
-        model: "ft:gpt-4o-mini-2024-07-18:xade-ai::AKCDJVl9",
+      const chatCompletion = await groq.chat.completions.create({
         messages: [
           { 
             role: "system",
@@ -811,19 +890,19 @@ To use this data in your responses, you should generate JavaScript code that acc
             content: userInput 
           }
         ],
+        model: "llama3-8b-8192",
         temperature: 0.7,
         max_tokens: 3000,
         top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
+        stream: false,
       });
 
-      const inputTokenCount = response.usage?.prompt_tokens;
+      const inputTokenCount = chatCompletion.usage?.prompt_tokens;
       setInputTokens(inputTokenCount || 0);
 
-      return response.choices[0]?.message?.content || '';
+      return chatCompletion.choices[0]?.message?.content || '';
     } catch (error) {
-      console.error('Error calling OpenAI API:', error);
+      console.error('Error calling Groq API:', error);
       throw new Error('Failed to get AI response');
     }
   };
@@ -844,8 +923,8 @@ To use this data in your responses, you should generate JavaScript code that acc
     console.log('User input:', userInput);
 
     try {
-      const initialAiResponse = await callOpenAIAPI(userInput);
-      console.log('Initial response from GPT-4o-mini:', initialAiResponse);
+      const initialGroqResponse = await callGroqAPI(userInput);
+      console.log('Initial response from Groq:', initialGroqResponse);
 
       const processResponse = async (response: string, userInput: string): Promise<string> => {
         const codeMatch = response.match(/```javascript\n([\s\S]*?)\n```/);
@@ -870,27 +949,26 @@ To use this data in your responses, you should generate JavaScript code that acc
 
           console.log('Execution result:', result);
 
-          // Make a direct call to OpenAI API without the system prompt
-          const finalResponse = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+          // Make a direct call to Groq API without the system prompt
+          const finalResponse = await groq.chat.completions.create({
             messages: [
               { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}` }
             ],
+            model: "llama3-8b-8192",
             temperature: 0.7,
             max_tokens: 3000,
             top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
+            stream: false,
           });
 
-          console.log('Final response from GPT-4o-mini:', finalResponse.choices[0]?.message?.content);
+          console.log('Final response from Groq:', finalResponse.choices[0]?.message?.content);
 
           return finalResponse.choices[0]?.message?.content || '';
         }
         return response;
       };
 
-      const processedResponse = await processResponse(initialAiResponse, userInput);
+      const processedResponse = await processResponse(initialGroqResponse, userInput);
       setMessages(prev => [...prev, { role: 'assistant', content: processedResponse }]);
 
       const endTime = Date.now();
@@ -915,6 +993,7 @@ To use this data in your responses, you should generate JavaScript code that acc
         'portfolioData', 'renderCryptoPanicNews', 'historicPortfolioData', 'getTokenName',
         'liquidity', 'kyc', 'audit', 'totalSupplyContracts', 'totalSupply', 'circulatingSupply',
         'circulatingSupplyAddresses', 'maxSupply', 'chat', 'tags', 'distribution', 'investors', 'releaseSchedule', 'getPriceHistory',
+        'calculateSMA', 'calculateRSI', 'calculateMACD', 'calculateBollingerBands', 'sendTransaction',
         `
           const { priceHistoryData, cryptoPanicNews, historicPortfolioData: historicData, walletPortfolio } = data;
           
@@ -1009,12 +1088,37 @@ To use this data in your responses, you should generate JavaScript code that acc
             },
             getPriceHistory: async (token) => {
               const result = await getPriceHistory(getTokenName(token));
-              return isLoaded(result) ? result : 'please resend the prompt';
+              if (isLoaded(result)) {
+                const prices = result.map(item => item[1]);
+                const sma20 = calculateSMA(prices, 20);
+                const rsi14 = calculateRSI(prices, 14);
+                const macd = calculateMACD(prices);
+                const bollingerBands = calculateBollingerBands(prices);
+                return {
+                  priceHistory: result,
+                  technicalIndicators: {
+                    sma20: sma20,
+                    rsi14: rsi14,
+                    macd: macd,
+                    bollingerBands: bollingerBands
+                  }
+                };
+              } else {
+                return 'please resend the prompt';
+              }
+            },
+            sendTransaction: async (to, amount, token) => {
+              try {
+                const result = await sendTransaction(to, amount, token);
+                return \`Transaction sent: \${result}\`;
+              } catch (error) {
+                return \`Error sending transaction: \${error.message}\`;
+              }
             },
           };
 
           const finalCode = \`${wrappedCode}\`.replace(
-            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory)\\(/g,
+            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory|sendTransaction)\\(/g,
             'await wrappedFunctions.$1('
           );
 
@@ -1045,7 +1149,9 @@ To use this data in your responses, you should generate JavaScript code that acc
         },
         renderCryptoPanicNews, historicPortfolioData, getTokenName,
         liquidity, kyc, audit, totalSupplyContracts, totalSupply, circulatingSupply,
-        circulatingSupplyAddresses, maxSupply, chat, tags, distribution, investors, releaseSchedule
+        circulatingSupplyAddresses, maxSupply, chat, tags, distribution, investors, releaseSchedule,
+        calculateSMA, calculateRSI, calculateMACD, calculateBollingerBands,
+        sendTransaction
       );
     } catch (error) {
       console.error('Error executing code:', error);

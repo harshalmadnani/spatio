@@ -361,18 +361,16 @@ function ChatInterface() {
   }));
 
   const { user } = useDynamicContext();
-  const walletAddr = useDynamicContext().primaryWallet?.address;
-
+  // const {primaryWallet} = useDynamicContext();
   useEffect(() => {
     if (user) {
-      setWalletAddresses([walletAddr]);
-      // console.log("wallet is available:", walletAddr);
-      // console.log("user is available:", user);
+      // console.log("wallet is available:", primaryWallet);
+      console.log("user is available:", user);
     } else {
       console.log("user is not available.");
     }
     
-  }, [user, walletAddr]);
+  }, [user]);
 
 
 const calculateSMA = (data: number[], period: number): number[] => {

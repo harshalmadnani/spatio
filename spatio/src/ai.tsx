@@ -251,6 +251,8 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true
 });
 
+console.log('REACT_APP_GROQ_API_KEY:', process.env.REACT_APP_GROQ_API_KEY);
+
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',

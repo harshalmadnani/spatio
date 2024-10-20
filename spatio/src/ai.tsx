@@ -282,7 +282,7 @@ function ChatInterface() {
   const [inputTokens, setInputTokens] = useState<number>(0);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean>(false);
   const [showAnnouncement, setShowAnnouncement] = useState<boolean>(true);
-
+  const [newsData, setNewsData] = useState<Record<string, any>>({});
   // Create a data object to store all fetched data
   const [data, setData] = useState<{
     priceHistoryData: any;
@@ -489,7 +489,7 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
     return priceHistoryData[token] || null;
   };
 
-  const fetchCryptoPanicData = async (coinname: string) => {
+  const fetchCryptoPanicNews = async (coinname: string) => {
     try {
       if (!coinname) {
         console.error('Attempted to fetch CryptoPanic data with undefined coinname');
@@ -497,7 +497,7 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
           open: true,
           message: 'Cannot fetch CryptoPanic data: Coin name is undefined'
         });
-        return;
+        return null;
       }
 
       const coin = coins.find(c => c.name.toLowerCase() === coinname.toLowerCase());
@@ -519,14 +519,8 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
           title: item.title,
           url: item.url
         }));
-        setData(prevData => ({ 
-          ...prevData, 
-          cryptoPanicNews: { 
-            ...prevData.cryptoPanicNews, 
-            [coinname]: newsItems 
-          } 
-        }));
         console.log(`CryptoPanic data for ${coinname} updated successfully.`);
+        return newsItems;
       } else {
         console.error('Invalid CryptoPanic data structure:', response.data);
         throw new Error('Invalid CryptoPanic data structure');
@@ -538,7 +532,22 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
         open: true, 
         message: `Failed to fetch CryptoPanic data for ${coinname}: ${error.message}`
       });
+      return null;
     }
+  };
+
+  const getNews = async (token: string) => {
+    if (!newsData[token]) {
+      const data = await fetchCryptoPanicNews(token);
+      if (data) {
+        setNewsData(prevData => ({
+          ...prevData,
+          [token]: data
+        }));
+      }
+      return data;
+    }
+    return newsData[token] || null;
   };
 
   const fetchMarketData = async (coinname: string) => {
@@ -766,7 +775,7 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
   const { primaryWallet } = useDynamicContext();
 
   // Add this function to send a transaction
-  const sendTransaction = async (to: string, amount: string, token: string) => {
+  const sendTransaction = async (to: string, amount: string) => {
     if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
       throw new Error("No Ethereum wallet connected");
     }
@@ -813,7 +822,7 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
         messages: [
           { 
             role: "system",
-            content: `You are spatio AI, a trading assistant with access to real-time financial data and wallet information. Before performing any operations, The coinName should be lowercase.
+            content: `You are spatio AI, a trading assistant with access to real-time financial data and wallet information. You can now also send transactions on behalf of the user. Before performing any operations, The coinName should be lowercase.
 
 You have access to the following data where token is the coin name:
 
@@ -854,6 +863,7 @@ distribution(token)
 investors(token)
 releaseSchedule(token)
 getPriceHistory(token)
+getNews(token)
 
 You also have access to the following portfolio-related data:
 
@@ -873,9 +883,11 @@ portfolioData.pnlTimelines: An object containing PNL data for different time per
   - '30d': { realized: [value], unrealized: [value] }
   - '1y': { realized: [value], unrealized: [value] }
 
-You also have access to the following function for fetching news:
+You also have access to the following function for sending transactions:
 
-renderCryptoPanicNews(token): Returns the latest news for the specified token.
+sendTransaction(to: string, amount: string): Sends a transaction to the specified address with the given amount of ETH. Returns a transaction hash if successful, or an error message if it fails.
+
+To use this function in your responses, you should generate JavaScript code that calls this function as needed. Always ask for confirmation before sending any transaction, and provide clear information about the transaction details.
 
 To use this data in your responses, you should generate JavaScript code that accesses and processes this data as needed. The code you generate will be executed by our system to provide the answer. Please format your response as follows:
 1. Include the JavaScript code within a code block, starting with \`\`\`javascript and ending with \`\`\`.
@@ -883,14 +895,15 @@ To use this data in your responses, you should generate JavaScript code that acc
 3. Don't show any comments.
 4. Always use optional chaining (?.) when accessing object properties.
 5. Always return a value.
-6. When fetching news, use the renderCryptoPanicNews function and return its result directly.`
+6. When sending a transaction, always ask for user confirmation before executing it.
+7. When someone asks whether they shoud buy/sell/hold a token, or why is a token dumping or pumping, fetch all data possible`
           },
           { 
             role: "user", 
             content: userInput 
           }
         ],
-        model: "llama3-8b-8192",
+        model: "llama-3.1-70b-versatile",
         temperature: 0.7,
         max_tokens: 3000,
         top_p: 1,
@@ -939,11 +952,8 @@ To use this data in your responses, you should generate JavaScript code that acc
             resolve();
           });
 
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Execution timed out')), maxExecutionTime);
-          });
 
-          await Promise.race([executionPromise, timeoutPromise]);
+          await Promise.race([executionPromise]);
 
           const executionTime = Date.now() - executionStartTime;
 
@@ -952,9 +962,9 @@ To use this data in your responses, you should generate JavaScript code that acc
           // Make a direct call to Groq API without the system prompt
           const finalResponse = await groq.chat.completions.create({
             messages: [
-              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}` }
+              { role: "user", content: `As spatio AI, provide an answer for the following query: "${userInput}". The data from the execution is: ${result}`  }
             ],
-            model: "llama3-8b-8192",
+            model: "llama-3.1-70b-versatile",
             temperature: 0.7,
             max_tokens: 3000,
             top_p: 1,
@@ -990,12 +1000,12 @@ To use this data in your responses, you should generate JavaScript code that acc
       const func = new Function(
         'data', 'selectedCoin', 'setSelectedCoin', 'getMarketData', 'getMetadata', 'getPriceHistory',
         'price', 'volume', 'marketCap', 'website', 'twitter', 'telegram', 'discord', 'description',
-        'portfolioData', 'renderCryptoPanicNews', 'historicPortfolioData', 'getTokenName',
+        'portfolioData', 'getNews', 'historicPortfolioData', 'getTokenName',
         'liquidity', 'kyc', 'audit', 'totalSupplyContracts', 'totalSupply', 'circulatingSupply',
-        'circulatingSupplyAddresses', 'maxSupply', 'chat', 'tags', 'distribution', 'investors', 'releaseSchedule', 'getPriceHistory',
+        'circulatingSupplyAddresses', 'maxSupply', 'chat', 'tags', 'distribution', 'investors', 'releaseSchedule',
         'calculateSMA', 'calculateRSI', 'calculateMACD', 'calculateBollingerBands', 'sendTransaction',
         `
-          const { priceHistoryData, cryptoPanicNews, historicPortfolioData: historicData, walletPortfolio } = data;
+          const { priceHistoryData, historicPortfolioData: historicData, walletPortfolio } = data;
           
           const isLoaded = (value) => value !== 'N/A' && value !== undefined && value !== null;
 
@@ -1033,7 +1043,10 @@ To use this data in your responses, you should generate JavaScript code that acc
               return isLoaded(result) ? result : 'please resend the prompt';
             },
             priceHistoryData: async (token) => priceHistoryData?.[getTokenName(token)] || 'please resend the prompt',
-            renderCryptoPanicNews: async (token) => renderCryptoPanicNews(getTokenName(token)) || 'please resend the prompt',
+            getNews: async (token) => {
+              const result = await getNews(getTokenName(token));
+              return isLoaded(result) ? result : 'please resend the prompt';
+            },
             liquidity: async (token) => {
               const result = await liquidity(getTokenName(token));
               return isLoaded(result) ? result : 'please resend the prompt';
@@ -1107,9 +1120,9 @@ To use this data in your responses, you should generate JavaScript code that acc
                 return 'please resend the prompt';
               }
             },
-            sendTransaction: async (to, amount, token) => {
+            sendTransaction: async (to, amount) => {
               try {
-                const result = await sendTransaction(to, amount, token);
+                const result = await sendTransaction(to, amount);
                 return \`Transaction sent: \${result}\`;
               } catch (error) {
                 return \`Error sending transaction: \${error.message}\`;
@@ -1118,7 +1131,7 @@ To use this data in your responses, you should generate JavaScript code that acc
           };
 
           const finalCode = \`${wrappedCode}\`.replace(
-            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|renderCryptoPanicNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory|sendTransaction)\\(/g,
+            /(price|volume|marketCap|website|twitter|telegram|discord|description|priceHistoryData|getNews|liquidity|kyc|audit|totalSupplyContracts|totalSupply|circulatingSupply|circulatingSupplyAddresses|maxSupply|chat|tags|distribution|investors|releaseSchedule|getPriceHistory|sendTransaction)\\(/g,
             'await wrappedFunctions.$1('
           );
 
@@ -1147,7 +1160,7 @@ To use this data in your responses, you should generate JavaScript code that acc
             return acc;
           }, {})
         },
-        renderCryptoPanicNews, historicPortfolioData, getTokenName,
+        getNews, historicPortfolioData, getTokenName,
         liquidity, kyc, audit, totalSupplyContracts, totalSupply, circulatingSupply,
         circulatingSupplyAddresses, maxSupply, chat, tags, distribution, investors, releaseSchedule,
         calculateSMA, calculateRSI, calculateMACD, calculateBollingerBands,
@@ -1490,62 +1503,6 @@ To use this data in your responses, you should generate JavaScript code that acc
     if (!metadata) return 'please resend the prompt';
     return metadata.release_schedule?.join(', ') || 'N/A';
   };
-  const renderCryptoPanicNews = async (coinname: string) => {
-    try {
-      if (!coinname) {
-        console.error('Attempted to fetch CryptoPanic data with undefined coinname');
-        return 'Cannot fetch news: Coin name is undefined';
-      }
-
-      const coin = coins.find(c => c.name.toLowerCase() === coinname.toLowerCase());
-      if (!coin) {
-        return `Coin not found: ${coinname}`;
-      }
-
-      if (!data.cryptoPanicNews || !data.cryptoPanicNews[coinname]) {
-        console.log(`Fetching CryptoPanic data for ${coinname} (${coin.symbol})...`);
-        const response = await axios.get(`https://cryptopanic.com/api/free/v1/posts/`, {
-          params: {
-            auth_token: '2c962173d9c232ada498efac64234bfb8943ba70',
-            public: 'true',
-            currencies: coin.symbol
-          }
-        });
-
-        if (response.data && response.data.results) {
-          const newsItems = response.data.results.map(item => ({
-            title: item.title,
-            url: item.url
-          }));
-          
-          setData(prevData => ({ 
-            ...prevData, 
-            cryptoPanicNews: { 
-              ...prevData.cryptoPanicNews, 
-              [coinname]: newsItems 
-            } 
-          }));
-          
-          console.log(`CryptoPanic data for ${coinname} updated successfully.`);
-        } else {
-          console.error('Invalid CryptoPanic data structure:', response.data);
-          return 'Error: Invalid news data structure';
-        }
-      }
-
-      const newsItems = data.cryptoPanicNews[coinname];
-      
-      if (!newsItems || newsItems.length === 0) {
-        return `No news available for ${coinname}`;
-      }
-
-      return newsItems.map(item => `${item.title}\n${item.url}`).join('\n\n');
-    } catch (error) {
-      console.error(`Error fetching CryptoPanic data for ${coinname}:`, error);
-      console.error('Error details:', error.response?.data || error.message);
-      return `Error fetching news for ${coinname}: ${error.message}`;
-    }
-  };
 
   const handleAcceptDisclaimer = () => {
     setDisclaimerAccepted(true);
@@ -1608,6 +1565,33 @@ To use this data in your responses, you should generate JavaScript code that acc
     setShowAnnouncement(false);
   };
 
+  const handleSendPOL = async () => {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+      setErrorSnackbar({
+        open: true,
+        message: "No Ethereum wallet connected"
+      });
+      return;
+    }
+
+    const walletClient = await primaryWallet.getWalletClient();
+    const [address] = await walletClient.getAddresses();
+
+    try {
+      // Always send 0.001 POL, regardless of any token mentioned by the user
+      const result = await sendTransaction(address, "0.001");
+      setErrorSnackbar({
+        open: true,
+        message: `Transaction sent: ${result}`
+      });
+    } catch (error) {
+      setErrorSnackbar({
+        open: true,
+        message: `Error sending transaction: ${error.message}`
+      });
+    }
+  };
+
   return (
     <div style={styles.chatInterface}>
       {renderDisclaimerDialog()}
@@ -1633,6 +1617,7 @@ To use this data in your responses, you should generate JavaScript code that acc
               : 'Add Wallet'}
             {walletAddresses.length > 1 && ` (+${walletAddresses.length - 1})`}
           </div>
+         
         </div>
       </div>
       <div style={styles.messageListContainer}>

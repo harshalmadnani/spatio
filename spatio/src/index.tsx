@@ -28,6 +28,21 @@ const myEvmNetworks = [
     networkId: 22040 ,
     rpcUrls: [' https://network.ambrosus-test.io '],
   },
+  {
+    blockExplorerUrls: ['https://explorer.testnet.zircuit.com'],
+    chainId: 48899  ,
+    chainName: 'Zircuit',
+    iconUrls: ['https://app.dynamic.xyz/assets/networks/eth.svg'],
+    name: 'Zircuit',
+    nativeCurrency: {
+      decimals: 18,
+      name: 'Ethereum',
+      symbol: 'ETH',
+      iconUrl: 'https://app.dynamic.xyz/assets/networks/eth.svg',
+    },
+    networkId: 48899 ,
+    rpcUrls: [' https://zircuit1-testnet.p2pify.com '],
+  },
 ];
 
 const root = ReactDOM.createRoot(

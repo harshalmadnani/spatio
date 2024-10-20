@@ -7,11 +7,8 @@ import { isEthereumWallet } from "@dynamic-labs/ethereum";
 
 export const SendTransactionSection: FC = () => {
   const { primaryWallet } = useDynamicContext();
-
   const [txnHash, setTxnHash] = useState("");
-
   if (!primaryWallet || !isEthereumWallet(primaryWallet)) return null;
-
   const onSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
 
@@ -19,9 +16,7 @@ export const SendTransactionSection: FC = () => {
 
     const address = formData.get("address") as string;
     const amount = formData.get("amount") as string;
-
     const walletClient = await primaryWallet.getWalletClient();
-
     const transaction = {
       to: address as `0x${string}`,
       value: amount ? parseEther(amount) : undefined,

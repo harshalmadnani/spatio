@@ -15,8 +15,7 @@ function App() {
         {}
         {isLoggedIn && (
           <>
-            {/* <ChatInterface /> */}
-            <SendTransactionSection />
+            <ChatInterface />
           </>
         )}
       </header>
